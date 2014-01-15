@@ -7,5 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Predis' => array($vendorDir . '/predis/predis/lib'),
-    'NginxCC' => array($baseDir . '/src'),
+    'NginxCP' => array($baseDir . '/src'),
 );

@@ -1,5 +1,5 @@
 <?php
-namespace NginxCC;
+namespace NginxCP;
 
 class Queue
 {

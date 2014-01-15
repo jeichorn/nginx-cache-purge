@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "8d3f8611dea79c3f46f43eca793d4163",
+    "hash": "9b0678766ef42ce4fe74d5826a5489d1",
     "packages": [
         {
             "name": "predis/predis",

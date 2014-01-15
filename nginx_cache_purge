@@ -1,11 +1,11 @@
 #!/usr/bin/php -d disable_functions = show_source
 <?php
-use NginxCC\Cache;
-use NginxCC\Inotify;
-use NginxCC\Queue;
+use NginxCP\Cache;
+use NginxCP\Inotify;
+use NginxCP\Queue;
 use Predis\Client as PredisClient;
 
-require __DIR__.'/../vendor/autoload.php';
+require __DIR__.'/vendor/autoload.php';
 
 
 $CACHE_PATH = "/mnt/cache";

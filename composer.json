@@ -1,5 +1,5 @@
 {
-    "name": "Pagely NginxCacheCleaner",
+    "name": "NginxCachePurge",
     "config": {
         "preferred-install": "dist"
     },
@@ -7,7 +7,7 @@
         "predis/predis": "~0.8"
     },
     "autoload": {
-        "psr-0": {  "NginxCC": "src/" }
+        "psr-0": {  "NginxCP": "src/" }
     },
     "config": {
         "bin-dir": "bin/"

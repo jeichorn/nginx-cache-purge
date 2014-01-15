@@ -1,5 +1,5 @@
 <?php
-namespace NginxCC;
+namespace NginxCP;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 use FilesystemIterator;
