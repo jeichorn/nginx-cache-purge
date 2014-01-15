@@ -1,0 +1,43 @@
+#!/usr/bin/php -d disable_functions = show_source
+<?php
+use NginxCC\Cache;
+use NginxCC\Inotify;
+use NginxCC\Queue;
+use Predis\Client as PredisClient;
+
+require __DIR__.'/../vendor/autoload.php';
+
+
+$CACHE_PATH = "/mnt/cache";
+
+$predis = new PredisClient();
+$cache = new Cache($CACHE_PATH);
+$inotify = new Inotify($CACHE_PATH);
+$queue = new Queue($predis);
+
+// get the keys already in the cache before we started inotify
+echo date('Y-m-d H:i:s')." - Scanning cache\n";
+$cache->scan($CACHE_PATH);
+echo date('Y-m-d H:i:s')." - Found ".count($cache->keys)." keys in the cache\n";
+
+while(true)
+{
+	// update keys from inotify
+	$updates = $inotify->getUpdates();
+	$cache->update($updates);
+
+	// get any purge jobs
+	$item = $queue->getJob();
+	if (!empty($item))
+	{
+		echo date('Y-m-d H:i:s')." - Purging $item\n";
+		$cache->purge($item);
+		echo date('Y-m-d H:i:s')." - We now have ".count($cache->keys)." keys\n";
+	}
+	else
+	{
+//		echo date('Y-m-d H:i:s')." - Sleeping\n";
+		sleep(1);
+	}
+}
+?>
