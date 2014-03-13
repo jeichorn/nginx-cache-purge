@@ -88,7 +88,7 @@ class Cache
 
 		$regex = preg_quote(str_replace('(.*)', '@@@', $path), '|');
 		$regex = str_replace('@@@', '(.*)', $regex);	
-		$regex = "|^http$host$regex|";
+		$regex = "|^https?$host$regex|";
 
 		echo date('Y-m-d H:i:s')." - checking $rule with $regex\n";
 		foreach($this->keys as $key => $file)
