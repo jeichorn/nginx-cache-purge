@@ -78,12 +78,6 @@ class Cache
 
 	public function purge($rule)
 	{
-		if (!strstr($rule, '*'))
-		{
-			echo date('Y-m-d H:i:s')." - ignoring purge for $rule no *\n";
-			return;
-		}
-
 		list($host, $path) = explode('::', $rule);
 
 		$regex = preg_quote(str_replace('(.*)', '@@@', $path), '|');
