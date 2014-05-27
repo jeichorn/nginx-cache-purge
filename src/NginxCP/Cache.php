@@ -86,15 +86,17 @@ class Cache
         // this assumes you have cache keys like
         // normalizedua--httpHostnamePath
         // https urls also match and normalizedua-- is optional
-		$regex = "|^([a-Z0-9]+--)?https?$host$regex|";
+		$regex = "|^([a-zA-Z0-9]+--)?https?$host$regex|";
 
 		echo date('Y-m-d H:i:s')." - checking $rule with $regex\n";
+        $count = 0;
 		foreach($this->keys as $key => $file)
 		{
 			if (preg_match($regex, $key))
 			{
 				echo date('Y-m-d H:i:s')." - Found a match $key\n";
-				unlink($file);
+				@unlink($file);
+                $count++;
 				//unset($this->keys[$key]); inotify will tell us to remove the key
 			}
 			else
@@ -102,5 +104,7 @@ class Cache
 				echo date('Y-m-d H:i:s')." - Miss on $key\n";
 			}
 		}
+
+        return $count;
 	}
 }
