@@ -9,6 +9,10 @@ class Inotify
 	{
 		// start a inotifywait process
 		$this->proc = popen("inotifywait -e delete -e moved_to -e close_write -e create -e delete -rm $path", "r");
+        if (!$this->proc)
+        {
+            throw new \Exception("Runing inotifywait failed");
+        }
 		stream_set_blocking($this->proc, 0);
 	}
 
