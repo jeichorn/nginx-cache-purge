@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#maldet breaks inotifywait by installing 32 bit versions of libs just for the hell of it, sigh
+ldd /usr/bin/inotifywait | grep -q "not found"
+if [[ $? -eq 0]] ;
+then
+    apt-get install --reinstall inotify-tools libinotifytools0
+fi
