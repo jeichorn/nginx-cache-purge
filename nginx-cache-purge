@@ -5,6 +5,8 @@ use NginxCP\Inotify;
 use NginxCP\Queue;
 use Predis\Client as PredisClient;
 
+define('RESCAN_TIME', 60*15);
+
 require __DIR__.'/vendor/autoload.php';
 
 passthru(__DIR__.'/fix_inotify_wait');
@@ -21,6 +23,7 @@ echo date('Y-m-d H:i:s')." - Scanning cache\n";
 $cache->scan($CACHE_PATH);
 echo date('Y-m-d H:i:s')." - Found ".count($cache->keys)." keys in the cache\n";
 
+$last = time();
 while(true)
 {
 	// update keys from inotify
@@ -37,6 +40,12 @@ while(true)
 	}
 	else
 	{
+        if (time()-$last > RESCAN_TIME)
+        {
+            echo date('Y-m-d H:i:s')." - Rescanning $CACHE_PATH\n";
+            $cache->scan($CACHE_PATH);
+            $last = time();
+        }
 //		echo date('Y-m-d H:i:s')." - Sleeping\n";
 		sleep(1);
 	}
