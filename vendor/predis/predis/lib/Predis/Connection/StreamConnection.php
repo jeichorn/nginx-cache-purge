@@ -23,6 +23,7 @@ use Predis\Iterator\MultiBulkResponseSimple;
  *  - scheme: it can be either 'tcp' or 'unix'.
  *  - host: hostname or IP address of the server.
  *  - port: TCP port of the server.
+ *  - path: path of a UNIX domain socket when scheme is 'unix'.
  *  - timeout: timeout to perform the connection.
  *  - read_write_timeout: timeout of read / write operations.
  *  - async_connect: performs the connection asynchronously.
@@ -72,19 +73,21 @@ class StreamConnection extends AbstractConnection
     /**
      * Initializes a TCP stream resource.
      *
-     * @param ConnectionParametersInterface $parameters Parameters used to initialize the connection.
+     * @param  ConnectionParametersInterface $parameters Parameters used to initialize the connection.
      * @return resource
      */
     private function tcpStreamInitializer(ConnectionParametersInterface $parameters)
     {
-        $uri = "tcp://{$parameters->host}:{$parameters->port}/";
+        $uri = "tcp://{$parameters->host}:{$parameters->port}";
         $flags = STREAM_CLIENT_CONNECT;
 
         if (isset($parameters->async_connect) && $parameters->async_connect) {
             $flags |= STREAM_CLIENT_ASYNC_CONNECT;
         }
+
         if (isset($parameters->persistent) && $parameters->persistent) {
             $flags |= STREAM_CLIENT_PERSISTENT;
+            $uri .= strpos($path = $parameters->path, '/') === 0 ? $path : "/$path";
         }
 
         $resource = @stream_socket_client($uri, $errno, $errstr, $parameters->timeout, $flags);
@@ -101,7 +104,7 @@ class StreamConnection extends AbstractConnection
             stream_set_timeout($resource, $timeoutSeconds, $timeoutUSeconds);
         }
 
-        if (isset($parameters->tcp_nodelay) && version_compare(PHP_VERSION, '5.4.0') >= 0) {
+        if (isset($parameters->tcp_nodelay) && function_exists('socket_import_stream')) {
             $socket = socket_import_stream($resource);
             socket_set_option($socket, SOL_TCP, TCP_NODELAY, (int) $parameters->tcp_nodelay);
         }
@@ -112,7 +115,7 @@ class StreamConnection extends AbstractConnection
     /**
      * Initializes a UNIX stream resource.
      *
-     * @param ConnectionParametersInterface $parameters Parameters used to initialize the connection.
+     * @param  ConnectionParametersInterface $parameters Parameters used to initialize the connection.
      * @return resource
      */
     private function unixStreamInitializer(ConnectionParametersInterface $parameters)
@@ -180,7 +183,7 @@ class StreamConnection extends AbstractConnection
         $socket = $this->getResource();
 
         while (($length = strlen($buffer)) > 0) {
-            $written = fwrite($socket, $buffer);
+            $written = @fwrite($socket, $buffer);
 
             if ($length === $written) {
                 return;
@@ -209,7 +212,7 @@ class StreamConnection extends AbstractConnection
         $payload = substr($chunk, 1, -2);
 
         switch ($prefix) {
-            case '+':    // inline
+            case '+':
                 switch ($payload) {
                     case 'OK':
                         return true;
@@ -221,7 +224,7 @@ class StreamConnection extends AbstractConnection
                         return $payload;
                 }
 
-            case '$':    // bulk
+            case '$':
                 $size = (int) $payload;
                 if ($size === -1) {
                     return null;
@@ -243,7 +246,7 @@ class StreamConnection extends AbstractConnection
 
                 return substr($bulkData, 0, -2);
 
-            case '*':    // multi bulk
+            case '*':
                 $count = (int) $payload;
 
                 if ($count === -1) {
@@ -261,10 +264,10 @@ class StreamConnection extends AbstractConnection
 
                 return $multibulk;
 
-            case ':':    // integer
+            case ':':
                 return (int) $payload;
 
-            case '-':    // error
+            case '-':
                 return new ResponseError($payload);
 
             default:
@@ -285,7 +288,7 @@ class StreamConnection extends AbstractConnection
 
         $buffer = "*{$reqlen}\r\n\${$cmdlen}\r\n{$commandId}\r\n";
 
-        for ($i = 0; $i < $reqlen - 1; $i++) {
+        for ($i = 0, $reqlen--; $i < $reqlen; $i++) {
             $argument = $arguments[$i];
             $arglen = strlen($argument);
             $buffer .= "\${$arglen}\r\n{$argument}\r\n";

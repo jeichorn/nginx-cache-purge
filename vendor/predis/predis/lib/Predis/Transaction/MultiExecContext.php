@@ -47,8 +47,8 @@ class MultiExecContext implements BasicClientInterface, ExecutableContextInterfa
     protected $commands;
 
     /**
-     * @param ClientInterface $client Client instance used by the context.
-     * @param array $options Options for the context initialization.
+     * @param ClientInterface $client  Client instance used by the context.
+     * @param array           $options Options for the context initialization.
      */
     public function __construct(ClientInterface $client, Array $options = null)
     {
@@ -101,8 +101,8 @@ class MultiExecContext implements BasicClientInterface, ExecutableContextInterfa
     /**
      * Checks is a flag is set.
      *
-     * @param int $flags Flag
-     * @return Boolean
+     * @param  int  $flags Flag
+     * @return bool
      */
     protected function checkState($flags)
     {
@@ -185,8 +185,8 @@ class MultiExecContext implements BasicClientInterface, ExecutableContextInterfa
     /**
      * Dynamically invokes a Redis command with the specified arguments.
      *
-     * @param string $method Command ID.
-     * @param array $arguments Arguments for the command.
+     * @param  string $method    Command ID.
+     * @param  array  $arguments Arguments for the command.
      * @return mixed
      */
     public function __call($method, $arguments)
@@ -200,23 +200,26 @@ class MultiExecContext implements BasicClientInterface, ExecutableContextInterfa
     /**
      * Executes the specified Redis command.
      *
-     * @param CommandInterface $command A Redis command.
-     * @return mixed
+     * @param CommandInterface $command Command instance.
+     * @return $this|mixed
      */
     public function executeCommand(CommandInterface $command)
     {
         $this->initialize();
-        $response = $this->client->executeCommand($command);
 
         if ($this->checkState(self::STATE_CAS)) {
-            return $response;
+            return $this->client->executeCommand($command);
         }
 
-        if (!$response instanceof ResponseQueued) {
-            $this->onProtocolError('The server did not respond with a QUEUED status reply');
-        }
+        $response = $this->client->getConnection()->executeCommand($command);
 
-        $this->commands->enqueue($command);
+        if ($response instanceof ResponseQueued) {
+            $this->commands->enqueue($command);
+        } else if ($response instanceof ResponseErrorInterface) {
+            throw new AbortedMultiExecException($this, $response->getMessage());
+        } else {
+            $this->onProtocolError('The server did not return a +QUEUED status response.');
+        }
 
         return $this;
     }
@@ -224,7 +227,7 @@ class MultiExecContext implements BasicClientInterface, ExecutableContextInterfa
     /**
      * Executes WATCH on one or more keys.
      *
-     * @param string|array $keys One or more keys.
+     * @param  string|array $keys One or more keys.
      * @return mixed
      */
     public function watch($keys)
@@ -331,7 +334,7 @@ class MultiExecContext implements BasicClientInterface, ExecutableContextInterfa
     /**
      * Handles the actual execution of the whole transaction.
      *
-     * @param mixed $callable Optional callback for execution.
+     * @param  mixed $callable Optional callback for execution.
      * @return array
      */
     public function execute($callable = null)
@@ -352,7 +355,7 @@ class MultiExecContext implements BasicClientInterface, ExecutableContextInterfa
                     $this->discard();
                 }
 
-                return;
+                return null;
             }
 
             $reply = $this->client->exec();

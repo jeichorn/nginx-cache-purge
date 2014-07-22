@@ -11,17 +11,17 @@
 
 namespace Predis\Transaction;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
+use PredisTestCase;
 use Predis\Client;
 use Predis\ResponseQueued;
+use Predis\ResponseError;
 use Predis\ServerException;
 use Predis\Command\CommandInterface;
 
 /**
  * @group realm-transaction
  */
-class MultiExecContextTest extends StandardTestCase
+class MultiExecContextTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -90,6 +90,8 @@ class MultiExecContextTest extends StandardTestCase
      */
     public function testCannotMixExecutionWithFluentInterfaceAndCallable()
     {
+        $exception = null;
+
         $commands = array();
 
         $callback = $this->getExecuteCallback(null, $commands);
@@ -101,8 +103,8 @@ class MultiExecContextTest extends StandardTestCase
             $tx->echo('foo')->execute(function ($tx) {
                 $tx->echo('bar');
             });
-        } catch (\Exception $ex) {
-            $exception = $ex;
+        } catch (\Exception $exception) {
+            // NOOP
         }
 
         $this->assertInstanceOf('Predis\ClientException', $exception);
@@ -420,6 +422,8 @@ class MultiExecContextTest extends StandardTestCase
      */
     public function testHandlesStandardExceptionsInBlock()
     {
+        $exception = null;
+
         $commands = array();
         $expected = array('foobar', true);
 
@@ -435,7 +439,7 @@ class MultiExecContextTest extends StandardTestCase
 
                 throw new \RuntimeException('TEST');
             });
-        } catch (\Exception $ex) {
+        } catch (\Exception $exception) {
             // NOOP
         }
 
@@ -462,12 +466,56 @@ class MultiExecContextTest extends StandardTestCase
                 $tx->echo('ERR Invalid operation');
                 $tx->get('foo');
             });
-        } catch (ServerException $ex) {
+        } catch (ServerException $exception) {
             $tx->discard();
         }
 
         $this->assertNull($replies);
         $this->assertSame(array('MULTI', 'SET', 'ECHO', 'DISCARD'), self::commandsToIDs($commands));
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testProperlyDiscardsTransactionAfterServerExceptionInBlock()
+    {
+        $connection = $this->getMockedConnection(function (CommandInterface $command) {
+            switch ($command->getId()) {
+                case 'MULTI':
+                    return true;
+
+                case 'ECHO':
+                    return new ResponseError('ERR simulated failure on ECHO');
+
+                case 'EXEC':
+                    return new ResponseError('EXECABORT Transaction discarded because of previous errors.');
+
+                default:
+                    return new ResponseQueued();
+            }
+        });
+
+        $client = new Client($connection);
+
+        // First attempt
+        $tx = new MultiExecContext($client);
+
+        try {
+            $tx->multi()->set('foo', 'bar')->echo('simulated failure')->exec();
+        } catch (\Exception $exception) {
+            $this->assertInstanceOf('Predis\Transaction\AbortedMultiExecException', $exception);
+            $this->assertSame('ERR simulated failure on ECHO', $exception->getMessage());
+        }
+
+        // Second attempt
+        $tx = new MultiExecContext($client);
+
+        try {
+            $tx->multi()->set('foo', 'bar')->echo('simulated failure')->exec();
+        } catch (\Exception $exception) {
+            $this->assertInstanceOf('Predis\Transaction\AbortedMultiExecException', $exception);
+            $this->assertSame('ERR simulated failure on ECHO', $exception->getMessage());
+        }
     }
 
     // ******************************************************************** //
@@ -479,16 +527,17 @@ class MultiExecContextTest extends StandardTestCase
      */
     public function testIntegrationHandlesStandardExceptionsInBlock()
     {
-        $client = $this->getClient();
         $exception = null;
+
+        $client = $this->getClient();
 
         try {
             $client->multiExec(function ($tx) {
                 $tx->set('foo', 'bar');
                 throw new \RuntimeException("TEST");
             });
-        } catch (\Exception $ex) {
-            $exception = $ex;
+        } catch (\Exception $exception) {
+            // NOOP
         }
 
         $this->assertInstanceOf('RuntimeException', $exception);
@@ -500,8 +549,9 @@ class MultiExecContextTest extends StandardTestCase
      */
     public function testIntegrationThrowsExceptionOnRedisErrorInBlock()
     {
-        $client = $this->getClient();
         $exception = null;
+
+        $client = $this->getClient();
         $value = (string) rand();
 
         try {
@@ -510,8 +560,8 @@ class MultiExecContextTest extends StandardTestCase
                 $tx->lpush('foo', 'bar');
                 $tx->set('foo', $value);
             });
-        } catch (ServerException $ex) {
-            $exception = $ex;
+        } catch (ServerException $exception) {
+            // NOOP
         }
 
         $this->assertInstanceOf('Predis\ResponseErrorInterface', $exception);
@@ -560,6 +610,7 @@ class MultiExecContextTest extends StandardTestCase
     public function testIntegrationWritesOnWatchedKeysAbortTransaction()
     {
         $exception = null;
+
         $client1 = $this->getClient();
         $client2 = $this->getClient();
 
@@ -569,8 +620,8 @@ class MultiExecContextTest extends StandardTestCase
                 $tx->get('sentinel');
                 $client2->set('sentinel', 'client2');
             });
-        } catch (AbortedMultiExecException $ex) {
-            $exception = $ex;
+        } catch (AbortedMultiExecException $exception) {
+            // NOOP
         }
 
         $this->assertInstanceOf('Predis\Transaction\AbortedMultiExecException', $exception);
@@ -632,7 +683,7 @@ class MultiExecContextTest extends StandardTestCase
      * Returns a mocked instance of Predis\Connection\SingleConnectionInterface
      * usingthe specified callback to return values from executeCommand().
      *
-     * @param \Closure $executeCallback
+     * @param  \Closure                                     $executeCallback
      * @return \Predis\Connection\SingleConnectionInterface
      */
     protected function getMockedConnection($executeCallback)
@@ -650,7 +701,8 @@ class MultiExecContextTest extends StandardTestCase
      * the specified callback to return values from the executeCommand method
      * of the underlying connection.
      *
-     * @param \Closure $executeCallback
+     * @param  \Closure         $executeCallback
+     * @param  array            $options
      * @return MultiExecContext
      */
     protected function getMockedTransaction($executeCallback, $options = array())
@@ -665,8 +717,9 @@ class MultiExecContextTest extends StandardTestCase
     /**
      * Returns a callback that emulates a server-side MULTI/EXEC transaction context.
      *
-     * @param array $expected Expected replies.
-     * @param array $commands Reference to an array that stores the whole flow of commands.
+     * @param  array    $expected Expected responses.
+     * @param  array    $commands Reference to an array storing the whole flow of commands.
+     * @param  array    $cas      Check and set operations performed by the transaction.
      * @return \Closure
      */
     protected function getExecuteCallback($expected = array(), &$commands = array(), &$cas = array())
@@ -707,6 +760,7 @@ class MultiExecContextTest extends StandardTestCase
                     if ($abort) {
                         $commands = $cas = array();
                         $abort = false;
+
                         return null;
                     }
 
@@ -746,11 +800,12 @@ class MultiExecContextTest extends StandardTestCase
      * Converts an array of instances of Predis\Command\CommandInterface and
      * returns an array containing their IDs.
      *
-     * @param array $commands List of commands instances.
+     * @param  array $commands List of commands instances.
      * @return array
      */
-    protected static function commandsToIDs($commands) {
-        return array_map(function($cmd) { return $cmd->getId(); }, $commands);
+    protected static function commandsToIDs($commands)
+    {
+        return array_map(function ($cmd) { return $cmd->getId(); }, $commands);
     }
 
     /**
@@ -761,24 +816,8 @@ class MultiExecContextTest extends StandardTestCase
      * @param array Additional client options.
      * @return Client client instance.
      */
-    protected function getClient(Array $parameters = array(), Array $options = array())
+    protected function getClient(array $parameters = array(), array $options = array())
     {
-        $parameters = array_merge(array(
-            'scheme' => 'tcp',
-            'host' => REDIS_SERVER_HOST,
-            'port' => REDIS_SERVER_PORT,
-            'database' => REDIS_SERVER_DBNUM,
-        ), $parameters);
-
-        $options = array_merge(array(
-            'profile' => REDIS_SERVER_VERSION
-        ), $options);
-
-        $client = new Client($parameters, $options);
-
-        $client->connect();
-        $client->flushdb();
-
-        return $client;
+        return $this->createClient($parameters, $options);
     }
 }
