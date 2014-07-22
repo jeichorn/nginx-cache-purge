@@ -33,6 +33,8 @@ $keys =
    'httpsexample.com/wp-includes/js/thickbox/thickbox.css??3.9.1' => '/mnt/cache/assets/0/d/d7/7fb1916bb90ece0f44053d7860c6d7d0',
    'httpsexample.com/favicon.ico?' => '/mnt/cache/assets/0/c/2c/1e62c712bcdb67161f88e885fcb72cc0',
    'httpsexample.com/wp-content/plugins/akismet/_inc/akismet.js??3.0.0' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf0',
+   'httpsexample.com/foo' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf1',
+   'httpsexample.com/foo/' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2',
  );
 
 $purge_rule = 'example.com::/(.*)';
