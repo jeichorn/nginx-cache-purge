@@ -101,7 +101,7 @@ class Cache
 			}
 			else
 			{
-				echo date('Y-m-d H:i:s')." - Miss on $key\n";
+				//echo date('Y-m-d H:i:s')." - Miss on $key\n";
 			}
 		}
 
