@@ -13,6 +13,20 @@ passthru(__DIR__.'/fix_inotify_wait');
 
 $CACHE_PATH = "/mnt/cache";
 
+$lock_file = "/tmp/.nginx-cache-purge-".md5($CACHE_PATH).".lock";
+if (file_exists($lock_file))
+{
+    $pid = file_get_contents($lock_file);
+    exec("ps $pid", $output);
+    if (count($output) == 2)
+    {
+        echo implode("\n", $output);
+        echo "cache purge already running for $CACHE_PATH pid from\n$lock_file\n";
+        exit(1);
+    }
+}
+file_put_contents($lock_file, getmypid());
+
 $predis = new PredisClient();
 $cache = new Cache($CACHE_PATH);
 $inotify = new Inotify($CACHE_PATH);
@@ -50,4 +64,6 @@ while(true)
 		sleep(1);
 	}
 }
+
+unlink($lock_file);
 ?>
