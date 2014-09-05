@@ -27,6 +27,7 @@ $keys =
    'httpexample.com/wp-content/plugins/buddypress/bp-core/css/admin-bar.min.css??2.0.1' => '/mnt/cache/assets/e/9/b7/08a51bebf4d828de4b2805b912ceb79e',
    'httpexample.com/wp-includes/js/thickbox/loadingAnimation.gif?' => '/mnt/cache/assets/e/7/ed/277e6c8c2de45a00cfed4c8eae74ed7e',
    'standard--httpsexample.com/wp-includes/css/admin-bar.min.css??3.9.1' => '/mnt/cache/assets/f/6/60/5eb4ffe9ef449788d53f6a4b7f8a606f',
+   'standard--httpsexample.com/' => '/mnt/cache/assets/f/6/60/5eb4ffe9ef449788d53f6a4b7f8a606f',
    'mobile--httpexample.com/wp-content/plugins/akismet/_inc/akismet.css??3.0.0' => '/mnt/cache/assets/f/6/41/e0dd3e651afc4c72826e95a55cdf416f',
    'standard--httpexample.com/wp-admin/css/login.min.css??3.9.1' => '/mnt/cache/assets/f/2/74/9d8754dbf9c9dd904c8a354cf931742f',
    'httpexample.com/wp-admin/images/wordpress-logo.svg??20131107' => '/mnt/cache/assets/0/1/8b/1c2e354f5c1f7c5ec893131d35108b10',
@@ -35,20 +36,30 @@ $keys =
    'httpsexample.com/wp-content/plugins/akismet/_inc/akismet.js??3.0.0' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf0',
    'httpsexample.com/foo' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf1',
    'httpsexample.com/foo/' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2',
+   'httpsbar.com/foo/' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2',
  );
 
-$purge_rule = 'example.com::/(.*)';
-Cache::$CACHE_PATH = __DIR__;
-$cache = new Cache();
-$cache->keys = $keys;
+$cases = array(
+    'example.com::/(.*)' => count($keys)-1,
+    'example.com::/' => 1,
+    'example.com::/wp-content/(.*)' => 13
+);
 
-$count = $cache->purge($purge_rule);
+foreach($cases as $case => $num_to_purge)
+{
+    $purge_rule = $case;
+    Cache::$CACHE_PATH = __DIR__;
+    $cache = new Cache();
+    $cache->keys = $keys;
 
-if ($count != count($keys))
-{
-    echo "TEST FAILED\n";
-}
-else
-{
-    echo "TEST OK\n";
+    $count = $cache->purge($purge_rule);
+
+    if ($count != $num_to_purge)
+    {
+        echo "$case TEST FAILED\n";
+    }
+    else
+    {
+        echo "$case TEST OK\n";
+    }
 }

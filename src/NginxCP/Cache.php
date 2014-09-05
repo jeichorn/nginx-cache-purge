@@ -86,7 +86,7 @@ class Cache
         // this assumes you have cache keys like
         // normalizedua--httpHostnamePath
         // https urls also match and normalizedua-- is optional
-		$regex = "|^([a-zA-Z0-9]+--)?https?$host$regex|";
+		$regex = "|^([a-zA-Z0-9]+--)?https?$host$regex$|";
 
 		echo date('Y-m-d H:i:s')." - checking $rule with $regex\n";
         $count = 0;
