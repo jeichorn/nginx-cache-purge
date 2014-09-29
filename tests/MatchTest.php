@@ -37,12 +37,13 @@ $keys =
    'httpsexample.com/foo' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf1',
    'httpsexample.com/foo/' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2',
    'httpsbar.com/foo/' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2',
+   'example.com/wp-content/plugins/akismet/_inc/akismet.js??3.0.0' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf0',
  );
 
 $cases = array(
     'example.com::/(.*)' => count($keys)-1,
     'example.com::/' => 1,
-    'example.com::/wp-content/(.*)' => 13
+    'example.com::/wp-content/(.*)' => 14
 );
 
 foreach($cases as $case => $num_to_purge)
