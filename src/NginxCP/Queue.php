@@ -12,7 +12,11 @@ class Queue
 
 	public function getJob()
 	{
-		return $this->redis->lpop('purge_list');
+		return $this->redis->rpop('purge_list');
 	}
-	
+
+    public function completeJob($job)
+    {
+        $this->redis->hdel("in_purge_list", $job);
+    }
 }

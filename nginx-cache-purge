@@ -50,6 +50,7 @@ while(true)
 	{
 		echo date('Y-m-d H:i:s')." - Purging $item\n";
 		$cache->purge($item);
+        $queue->completeJob($item);
 		echo date('Y-m-d H:i:s')." - We now have ".count($cache->keys)." keys\n";
 	}
 	else
