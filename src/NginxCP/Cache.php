@@ -90,12 +90,15 @@ class Cache
 
 		echo date('Y-m-d H:i:s')." - checking $rule with $regex\n";
         $count = 0;
+        $s = microtime(true);
 		foreach($this->keys as $key => $file)
 		{
 			if (preg_match($regex, $key))
 			{
 				echo date('Y-m-d H:i:s')." - Found a match $key\n";
+                $t = microtime(true);
 				@unlink($file);
+                $unlink += (microtime(true)-$t);
                 $count++;
 				//unset($this->keys[$key]); inotify will tell us to remove the key
 			}
@@ -104,6 +107,9 @@ class Cache
 				//echo date('Y-m-d H:i:s')." - Miss on $key\n";
 			}
 		}
+        $total = microtime(true)-$s;
+
+        echo date('Y-m-d H:i:s')." - $rule took $total unlink took $unlink\n";
 
         return $count;
 	}
