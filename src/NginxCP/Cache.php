@@ -73,36 +73,35 @@ class Cache
         // https urls also match and normalizedua-- is optional
 		$regex = "|^([a-zA-Z0-9]+--)?(https?)?$host$regex$|";
 
-		echo date('Y-m-d H:i:s')." - checking $rule with $regex\n";
         $count = 0;
         $unlink = 0;
         $s = microtime(true);
         if (isset($this->keys[$host]))
         {
+            $count = count($this->keys[$host]);
+            echo date('Y-m-d H:i:s')." - $host has $count keys checking $rule with $regex\n";
             foreach($this->keys[$host] as $key => $file)
             {
                 if (preg_match($regex, $key))
                 {
                     echo date('Y-m-d H:i:s')." - Found a match $key\n";
-                    $t = microtime(true);
                     @unlink($file);
                     unset($this->keys[$host][$key]);
-                    $unlink += (microtime(true)-$t);
-                    $count++;
+                    $unlink++;
                 }
                 else
                 {
                     //echo date('Y-m-d H:i:s')." - Miss on $key\n";
                 }
             }
+            $total = round(microtime(true)-$s,4);
+
+            echo date('Y-m-d H:i:s')." - $count keys killed in $total $rule\n";
         }
         else
         {
             echo date('Y-m-d H:i:s')." - No keys for $host\n";
         }
-        $total = microtime(true)-$s;
-
-        echo date('Y-m-d H:i:s')." - $rule took $total unlink took $unlink\n";
 
         return $count;
 	}
