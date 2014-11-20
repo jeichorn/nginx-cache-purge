@@ -12,10 +12,12 @@ class Cache
 
 	public function scan($path)
 	{
+        $this->keys = [];
 		$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS));
 		foreach($iterator as $file)
 		{
-			$this->keys[$this->keyFromFile($file)] = (string)$file;
+            list($domain, $key) = $this->keyFromFile($file);
+			$this->keys[$domain][$key] = (string)$file;
 		}
 	}
 
@@ -28,7 +30,14 @@ class Cache
 		foreach($lines as $line)
 		{
 			if (substr($line, 0, 4) === "KEY:")
-				return substr($line, 5);
+            {
+                $domain = 'unknown';
+                $key = substr($line, 5);
+                if (preg_match('@--([^/]+)/@', $key, $match))
+                    $domain = $match[1];
+
+                return array($domain, $key);
+            }
 		}
 		echo date('Y-m-d H:i:s')." - did't find a key in $file\n";
 	}
@@ -38,41 +47,17 @@ class Cache
 		$updated = false;
 		foreach($updates as $file => $status)
 		{
-			if ($status == 'DELETE')
-			{
-				$success = false;
-				foreach($this->keys as $key => $f)
-				{
-					if ($file == $f)
-					{
-						unset($this->keys[$key]);
-						$success = true;
-						break;
-					}
-				}
-				if (!$success)
-				{
-					echo date('Y-m-d H:i:s')." didn't find $file in the cache to delete\n";
-				}
-				else
-				{
-					$updated = true;
-				}
-			}
-			else
-			{
-				if (is_file($file))
-				{
-					$this->keys[$this->keyFromFile($file)] = $file;
-					$updated = true;
-				}
-			}
+            if (is_file($file))
+            {
+                list($domain, $key) = $this->keyFromFile($file);
+                $this->keys[$domain][$key] = (string)$file;
+            }
 		}
 
 		if ($updated)
 		{
 			$newcount = count($this->keys);
-			echo date('Y-m-d H:i:s')." - update keys now have $newcount\n";
+			echo date('Y-m-d H:i:s')." - update keys now have $newcount domains\n";
 		}
 	}
 
@@ -90,23 +75,31 @@ class Cache
 
 		echo date('Y-m-d H:i:s')." - checking $rule with $regex\n";
         $count = 0;
+        $unlink = 0;
         $s = microtime(true);
-		foreach($this->keys as $key => $file)
-		{
-			if (preg_match($regex, $key))
-			{
-				echo date('Y-m-d H:i:s')." - Found a match $key\n";
-                $t = microtime(true);
-				@unlink($file);
-                $unlink += (microtime(true)-$t);
-                $count++;
-				//unset($this->keys[$key]); inotify will tell us to remove the key
-			}
-			else
-			{
-				//echo date('Y-m-d H:i:s')." - Miss on $key\n";
-			}
-		}
+        if (isset($this->keys[$host]))
+        {
+            foreach($this->keys[$host] as $key => $file)
+            {
+                if (preg_match($regex, $key))
+                {
+                    echo date('Y-m-d H:i:s')." - Found a match $key\n";
+                    $t = microtime(true);
+                    @unlink($file);
+                    unset($this->keys[$host][$key]);
+                    $unlink += (microtime(true)-$t);
+                    $count++;
+                }
+                else
+                {
+                    //echo date('Y-m-d H:i:s')." - Miss on $key\n";
+                }
+            }
+        }
+        else
+        {
+            echo date('Y-m-d H:i:s')." - No keys for $host\n";
+        }
         $total = microtime(true)-$s;
 
         echo date('Y-m-d H:i:s')." - $rule took $total unlink took $unlink\n";

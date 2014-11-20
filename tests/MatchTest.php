@@ -7,6 +7,7 @@ use NginxCP\Cache;
 
 $keys = 
  array (
+     'example.com' => array(
    'httpexample.com/wp-content/plugins/bbpress/templates/default/js/editor.js??2.5.3-5249' => '/mnt/cache/assets/3/c/66/388893c966a193b41b1b89d7611666c3',
    'httpexample.com/wp-content/plugins/buddypress/bp-templates/bp-legacy/js/buddypress.js??2.0.1' => '/mnt/cache/assets/6/9/1a/f83d5a8a5646ca63088c2970f49c1a96',
    'httpexample.com/wp-includes/js/jquery/jquery-migrate.min.js??1.2.1' => '/mnt/cache/assets/6/1/b4/0e8dda24513f3da040a4ab8cc90ab416',
@@ -36,12 +37,15 @@ $keys =
    'httpsexample.com/wp-content/plugins/akismet/_inc/akismet.js??3.0.0' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf0',
    'httpsexample.com/foo' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf1',
    'httpsexample.com/foo/' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2',
-   'httpsbar.com/foo/' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2',
    'example.com/wp-content/plugins/akismet/_inc/akismet.js??3.0.0' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf0',
+   ),
+   'bar.com' => array(
+       'httpsbar.com/foo/' => '/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2',
+   )
  );
 
 $cases = array(
-    'example.com::/(.*)' => count($keys)-1,
+    'example.com::/(.*)' => count($keys['example.com']),
     'example.com::/' => 1,
     'example.com::/wp-content/(.*)' => 14
 );

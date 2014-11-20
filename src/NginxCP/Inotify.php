@@ -4,7 +4,7 @@ namespace NginxCP;
 class Inotify 
 {
 	protected $proc;
-    protected $cmd = 'inotifywait -e delete -e moved_to -e close_write -e create -e delete -rm';
+    protected $cmd = 'inotifywait -e moved_to -e close_write -e create -rm';
 
 	public function __construct($path)
 	{
