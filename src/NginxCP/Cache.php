@@ -33,8 +33,8 @@ class Cache
             {
                 $domain = 'unknown';
                 $key = substr($line, 5);
-                if (preg_match('@--([^/]+)/@', $key, $match))
-                    $domain = $match[1];
+                if (preg_match('@--(https?)?([^/]+)/@', $key, $match))
+                    $domain = $match[2];
 
                 return array($domain, $key);
             }
