@@ -68,3 +68,4 @@ foreach($cases as $case => $num_to_purge)
         echo "$case TEST OK\n";
     }
 }
+

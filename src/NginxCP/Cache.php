@@ -101,13 +101,13 @@ class Cache
             }
             $total = round(microtime(true)-$s,4);
 
-            echo date('Y-m-d H:i:s')." - $count keys killed in $total $rule\n";
+            echo date('Y-m-d H:i:s')." - $unlink key(s) killed in $total $rule\n";
         }
         else
         {
             echo date('Y-m-d H:i:s')." - No keys for $host\n";
         }
 
-        return $count;
+        return $unlink;
 	}
 }
