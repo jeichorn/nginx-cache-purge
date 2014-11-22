@@ -31,16 +31,21 @@ class Cache
 		{
 			if (substr($line, 0, 4) === "KEY:")
             {
-                $domain = 'unknown';
-                $key = substr($line, 5);
-                if (preg_match('@--([^/]+)/@', $key, $match))
-                    $domain = $match[1];
-
-                return array($domain, $key);
+                return $this->parseKey($line);
             }
 		}
 		echo date('Y-m-d H:i:s')." - did't find a key in $file\n";
 	}
+
+    public function parseKey($line)
+    {
+        $domain = 'unknown';
+        $key = substr($line, 5); // skip over 'KEY: '
+        if (preg_match('@--(https?)?([^/]+)/@', $key, $match))
+            $domain = $match[2];
+
+        return array($domain, $key);
+    }
 
 	public function update($updates)
 	{
@@ -96,13 +101,13 @@ class Cache
             }
             $total = round(microtime(true)-$s,4);
 
-            echo date('Y-m-d H:i:s')." - $count keys killed in $total $rule\n";
+            echo date('Y-m-d H:i:s')." - $unlink key(s) killed in $total $rule\n";
         }
         else
         {
             echo date('Y-m-d H:i:s')." - No keys for $host\n";
         }
 
-        return $count;
+        return $unlink;
 	}
 }
