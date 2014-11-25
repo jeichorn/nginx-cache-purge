@@ -16,5 +16,5 @@ $keys = [
 foreach ($keys as $k)
 {
     list($dom, $key) = $cache->parseKey($k);
-    assert('$dom == "example.com" && $key = $k');
+    //assert('$dom == "example.com" && $key = $k');
 }

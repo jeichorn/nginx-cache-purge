@@ -41,8 +41,8 @@ class Cache
     {
         $domain = 'unknown';
         $key = substr($line, 5); // skip over 'KEY: '
-        if (preg_match('@--(https?)?([^/]+)/@', $key, $match))
-            $domain = $match[2];
+        if (preg_match('@--([^/]+)/@', $key, $match))
+            $domain = $match[1];
 
         return array($domain, $key);
     }
@@ -81,29 +81,36 @@ class Cache
         $count = 0;
         $unlink = 0;
         $s = microtime(true);
-        if (isset($this->keys[$host]))
+        $possible = array($host, 'http'.$host, 'https'.$host);
+        $found = false;
+        foreach($possible as $index)
         {
-            $count = count($this->keys[$host]);
-            echo date('Y-m-d H:i:s')." - $host has $count keys checking $rule with $regex\n";
-            foreach($this->keys[$host] as $key => $file)
+            if (isset($this->keys[$index]))
             {
-                if (preg_match($regex, $key))
+                $found = true;
+                $count = count($this->keys[$host]);
+                echo date('Y-m-d H:i:s')." - $host has $count keys checking $rule with $regex\n";
+                foreach($this->keys[$index] as $key => $file)
                 {
-                    echo date('Y-m-d H:i:s')." - Found a match $key\n";
-                    @unlink($file);
-                    unset($this->keys[$host][$key]);
-                    $unlink++;
+                    if (preg_match($regex, $key))
+                    {
+                        echo date('Y-m-d H:i:s')." - Found a match $key\n";
+                        @unlink($file);
+                        unset($this->keys[$host][$key]);
+                        $unlink++;
+                    }
+                    else
+                    {
+                        //echo date('Y-m-d H:i:s')." - Miss on $key\n";
+                    }
                 }
-                else
-                {
-                    //echo date('Y-m-d H:i:s')." - Miss on $key\n";
-                }
-            }
-            $total = round(microtime(true)-$s,4);
+                $total = round(microtime(true)-$s,4);
 
-            echo date('Y-m-d H:i:s')." - $unlink key(s) killed in $total $rule\n";
+                echo date('Y-m-d H:i:s')." - $unlink key(s) killed in $total $rule\n";
+            }
         }
-        else
+
+        if (!$found)
         {
             echo date('Y-m-d H:i:s')." - No keys for $host\n";
         }
