@@ -96,7 +96,7 @@ class Cache
                     {
                         echo date('Y-m-d H:i:s')." - Found a match $key\n";
                         @unlink($file);
-                        unset($this->keys[$host][$key]);
+                        unset($this->keys[$index][$key]);
                         $unlink++;
                     }
                     else
