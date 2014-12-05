@@ -88,7 +88,7 @@ class Cache
             if (isset($this->keys[$index]))
             {
                 $found = true;
-                $count = count($this->keys[$host]);
+                $count = count($this->keys[$index]);
                 echo date('Y-m-d H:i:s')." - $host has $count keys checking $rule with $regex\n";
                 foreach($this->keys[$index] as $key => $file)
                 {
