@@ -8,6 +8,7 @@ class Inotify
     protected $cmd = 'inotifywait -e moved_to -e close_write -e create -rm';
     protected $inPing = false;
     protected $lastPing = 0;
+    protected $debug = false;
 
 	public function __construct($path)
 	{
@@ -37,7 +38,8 @@ class Inotify
                 if ($file == 'ping')
                 {
                     $this->inPing = false;
-                    echo date('Y-m-d H:i:s')." - PONG\n";
+                    if ($this->debug)
+                        echo date('Y-m-d H:i:s')." - PONG\n";
                     continue;
                 }
 				$updates[$path.$file] = $event;
@@ -76,7 +78,8 @@ class Inotify
         }
         else if ($now - $this->lastPing > 10)
         {
-            echo date('Y-m-d H:i:s')." - PING\n";
+            if ($this->debug)
+                echo date('Y-m-d H:i:s')." - PING\n";
             $this->inPing = true;
             $this->lastPing = microtime(true);
             file_put_contents($this->path."/ping", $this->lastPing);
