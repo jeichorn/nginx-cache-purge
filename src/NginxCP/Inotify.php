@@ -4,10 +4,15 @@ namespace NginxCP;
 class Inotify 
 {
 	protected $proc;
+    protected $path;
     protected $cmd = 'inotifywait -e moved_to -e close_write -e create -rm';
+    protected $inPing = false;
+    protected $lastPing = 0;
 
 	public function __construct($path)
 	{
+        $this->path = $path;
+
         // we can leak these guys so cleanup on start
         $this->killStaleInotify();
 
@@ -29,11 +34,18 @@ class Inotify
 			if ($line !== false)
 			{
 				list($path, $event, $file) = explode(" ", rtrim($line));
+                if ($file == 'ping')
+                {
+                    $this->inPing = false;
+                    echo date('Y-m-d H:i:s')." - PONG\n";
+                    continue;
+                }
 				$updates[$path.$file] = $event;
 			}
 		}
 		while($line !== false);
 
+        $this->ping();
 		return $updates;
 	}
 
@@ -47,6 +59,27 @@ class Inotify
                 $pid = $match[1];
                 posix_kill($pid, SIGKILL);
             }
+        }
+    }
+
+    public function ping()
+    {
+        $now = microtime(true);
+        if ($this->inPing)
+        {
+            if ($now - $this->lastPing > 3)
+            {
+                echo date('Y-m-d H:i:s')." - Ping Failed\n";
+                throw new \Exception('Ping Failed', 10);
+                return false;
+            }
+        }
+        else if ($now - $this->lastPing > 10)
+        {
+            echo date('Y-m-d H:i:s')." - PING\n";
+            $this->inPing = true;
+            $this->lastPing = microtime(true);
+            file_put_contents($this->path."/ping", $this->lastPing);
         }
     }
 }

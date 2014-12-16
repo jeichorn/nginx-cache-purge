@@ -41,7 +41,14 @@ $last = time();
 while(true)
 {
 	// update keys from inotify
-	$updates = $inotify->getUpdates();
+    try {
+        $updates = $inotify->getUpdates();
+    }
+    catch(\Exception $e)
+    {
+        // this means inotify has failed so lets exit so that die so that supervisor will restart us
+        exit(1);
+    }
 	$cache->update($updates);
 
 	// get any purge jobs
