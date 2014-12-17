@@ -19,6 +19,11 @@ class Cache
             list($domain, $key) = $this->keyFromFile($file);
 			$this->keys[$domain][$key] = (string)$file;
 		}
+        echo date('Y-m-d H:i:s')." Key counts by domain: \n";
+		foreach($this->keys as $domain => $keys)
+		{
+			echo date('Y-m-d H:i:s')." - $domain - ".count($keys)."\n";
+		}
 	}
 
 	public function keyFromFile($file)
@@ -76,7 +81,7 @@ class Cache
         // this assumes you have cache keys like
         // normalizedua--httpHostnamePath
         // https urls also match and normalizedua-- is optional
-		$regex = "|^([a-zA-Z0-9]+--)?(https?)?$host$regex$|";
+		$regex = "|^([a-zA-Z0-9]+--)?(https?)?$host$regex\??$|";
 
         $count = 0;
         $unlink = 0;
