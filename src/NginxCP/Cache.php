@@ -17,10 +17,10 @@ class Cache
 		foreach($iterator as $file)
 		{
             list($domain, $key) = $this->keyFromFile($file);
-            if (!isset($this->keys[$domain][$key]))
-                $this->keys[$domain][$key] = [];
 
-			$this->keys[$domain][$key][] = (string)$file;
+            $sfile = (string)$file;
+
+			$this->keys[$domain][$key][$sfile] = $sfile;
 		}
         echo date('Y-m-d H:i:s')." Key counts by domain: \n";
 		foreach($this->keys as $domain => $keys)
@@ -63,10 +63,9 @@ class Cache
             if (is_file($file))
             {
                 list($domain, $key) = $this->keyFromFile($file);
-                if (!isset($this->keys[$domain][$key]))
-                    $this->keys[$domain][$key] = [];
+                $sfile = (string)$file;
 
-                $this->keys[$domain][$key][] = (string)$file;
+                $this->keys[$domain][$key][$sfile] = $sfile;
             }
 		}
 

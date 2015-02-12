@@ -5,7 +5,7 @@ use NginxCP\Inotify;
 use NginxCP\Queue;
 use Predis\Client as PredisClient;
 
-define('RESCAN_TIME', 60*15);
+$RESCAN_TIME = 60*15;
 
 require __DIR__.'/vendor/autoload.php';
 
@@ -58,11 +58,16 @@ while(true)
 		echo date('Y-m-d H:i:s')." - Purging $item\n";
 		$cache->purge($item);
         $queue->completeJob($item);
-		echo date('Y-m-d H:i:s')." - We now have ".count($cache->keys, COUNT_RECURSIVE)." keys\n";
+        $count = count($cache->keys, COUNT_RECURSIVE);
+        if ($count > 50000)
+        {
+            $RESCAN_TIME = 60*60;
+        }
+		echo date('Y-m-d H:i:s')." - We now have $count keys\n";
 	}
 	else
 	{
-        if (time()-$last > RESCAN_TIME)
+        if (time()-$last > $RESCAN_TIME)
         {
             echo date('Y-m-d H:i:s')." - Rescanning $CACHE_PATH\n";
             $cache->scan($CACHE_PATH);
