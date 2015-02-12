@@ -17,7 +17,10 @@ class Cache
 		foreach($iterator as $file)
 		{
             list($domain, $key) = $this->keyFromFile($file);
-			$this->keys[$domain][$key] = (string)$file;
+            if (!isset($this->keys[$domain][$key]))
+                $this->keys[$domain][$key] = [];
+
+			$this->keys[$domain][$key][] = (string)$file;
 		}
         echo date('Y-m-d H:i:s')." Key counts by domain: \n";
 		foreach($this->keys as $domain => $keys)
@@ -60,7 +63,10 @@ class Cache
             if (is_file($file))
             {
                 list($domain, $key) = $this->keyFromFile($file);
-                $this->keys[$domain][$key] = (string)$file;
+                if (!isset($this->keys[$domain][$key]))
+                    $this->keys[$domain][$key] = [];
+
+                $this->keys[$domain][$key][] = (string)$file;
             }
 		}
 
@@ -95,12 +101,15 @@ class Cache
                 $found = true;
                 $count = count($this->keys[$index]);
                 echo date('Y-m-d H:i:s')." - $host has $count keys checking $rule with $regex\n";
-                foreach($this->keys[$index] as $key => $file)
+                foreach($this->keys[$index] as $key => $files)
                 {
                     if (preg_match($regex, $key))
                     {
                         echo date('Y-m-d H:i:s')." - Found a match $key\n";
-                        @unlink($file);
+                        foreach($files as $file)
+                        {
+                            @unlink($file);
+                        }
                         unset($this->keys[$index][$key]);
                         $unlink++;
                     }
