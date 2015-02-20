@@ -86,7 +86,7 @@ class Cache
         // this assumes you have cache keys like
         // normalizedua--httpHostnamePath
         // https urls also match and normalizedua-- is optional
-		$regex = "|^([a-zA-Z0-9]+--)?(https?)?$host$regex\??$|";
+		$regex = "|^([^-]+--)?(https?)?$host$regex\??|";
 
         $count = 0;
         $unlink = 0;
