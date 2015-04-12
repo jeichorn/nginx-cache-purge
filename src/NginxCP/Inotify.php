@@ -15,7 +15,7 @@ class Inotify
         $this->path = $path;
 
         // we can leak these guys so cleanup on start
-        $this->killStaleInotify();
+        $this->killInotify();
 
 		// start a inotifywait process
 		$this->proc = popen("$this->cmd $path", "r");
@@ -51,7 +51,7 @@ class Inotify
 		return $updates;
 	}
 
-    public function killStaleInotify()
+    public function killInotify()
     {
         exec('ps aux | grep '.escapeshellarg($this->cmd).' | grep -v grep', $output);
         foreach($output as $line)
