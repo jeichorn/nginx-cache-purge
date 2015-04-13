@@ -75,3 +75,9 @@ foreach($cases as $case => $num_to_purge)
 }
 
 echo "Test Status: $STATUS\n";
+
+if ($STATUS == "OK") {
+    exit(0);
+} else {
+    exit(1);
+}
