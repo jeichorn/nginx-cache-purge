@@ -80,13 +80,13 @@ class Cache
 	{
 		list($host, $path) = explode('::', $rule);
 
-		$regex = preg_quote(str_replace('(.*)', '@@@', $path), '|');
+		$regex = preg_quote(str_replace('(.*)', '@@@', $path), '~');
 		$regex = str_replace('@@@', '(.*)', $regex);	
 
         // this assumes you have cache keys like
         // normalizedua--httpHostnamePath
         // https urls also match and normalizedua-- is optional
-		$regex = "|^([^-]+--)?(https?)?$host$regex\??|";
+		$regex = "~^([^-]+--)?(https?)?$host$regex(\?.*)?$~";
 
         $count = 0;
         $unlink = 0;

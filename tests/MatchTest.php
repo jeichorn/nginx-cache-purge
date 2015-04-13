@@ -38,6 +38,7 @@ $keys =
    'httpsexample.com/foo' => ['/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf1'],
    'httpsexample.com/foo/' => ['/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2'],
    'httpsexample.com/foo/?' => ['/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2'],
+   'httpsexample.com/foo/?blah=1' => ['/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf2'],
    'example.com/wp-content/plugins/akismet/_inc/akismet.js??3.0.0' => ['/mnt/cache/assets/0/f/6b/c6213ab04583d93f8a4fdf792c576bf0'],
    ),
    'bar.com' => array(
@@ -48,7 +49,8 @@ $keys =
 $cases = array(
     'example.com::/(.*)' => count($keys['example.com']),
     'example.com::/' => 1,
-    'example.com::/wp-content/(.*)' => 14
+    'example.com::/wp-content/(.*)' => 14,
+    'example.com::/foo/' => 3,
 );
 
 $STATUS = 'OK';
