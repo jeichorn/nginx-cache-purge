@@ -46,7 +46,12 @@ while(true)
     }
     catch(\Exception $e)
     {
-        // this means inotify has failed so lets exit so that die so that supervisor will restart us
+        // this means inotify has failed so let's exit so that supervisor will
+        // restart us
+        // we also need to kill our children; inotifywait runs forever in a
+        // loop and if not interrupted we would be stuck here waiting for it
+        // to exit on its own
+        $inotify->killInotify();
         exit(1);
     }
 	$cache->update($updates);
