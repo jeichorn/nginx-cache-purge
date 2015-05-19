@@ -4,6 +4,8 @@ import (
     "fmt"
     "regexp"
     "log"
+    "strings"
+    "os"
 )
 
 type CacheKeys struct {
@@ -17,7 +19,7 @@ type CacheItem struct {
     file string 
 }
 
-var splitJob = regexp.MustCompile(`/^([^:]+)::(.+)$/`)
+var splitJob = regexp.MustCompile(`^([^:]+)::(.+)$`)
 
 func NewCacheKeys() *CacheKeys {
     return &CacheKeys{make(map[string]map[string]map[string]string), make(map[string]CacheItem)}
@@ -91,7 +93,6 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
     var regex string
 
     matched := splitJob.FindAllStringSubmatch(job, -1)
-    fmt.Printf("%#v\n", matched)
     if (len(matched) == 1 && len(matched[0]) == 3) {
         host = string(matched[0][1])
         regex = string(matched[0][2])
@@ -100,7 +101,8 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
         return false
     }
 
-    regexString := fmt.Sprintf(`~^([^-]+--)?(https?)?%s%s(\?.*)?$~`, host, regex)
+    regex = strings.Replace(regexp.QuoteMeta(regex), "\\(\\.\\*\\)", "(.*)", -1)
+    regexString := fmt.Sprintf(`^([^-]+--)?(https?)?%s%s(\?.*)?$`, host, regex)
 
     DebugMessage("Testing %s with %s\n", host, regexString)
 
@@ -116,7 +118,11 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
             DebugMessage(key)
             if (tester.MatchString(key)) {
                 DebugMessage(fmt.Sprintf("Found a match: %s\n", key))
-                fmt.Printf("%v\n", files)
+                for _, file := range files {
+                    DebugMessage(fmt.Sprintf("Deleting: %s\n", file))
+                    os.Remove(file)
+                    ck.removeEntry(file)
+                }
             }
         }
     } else {

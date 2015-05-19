@@ -51,7 +51,7 @@ func keyFromFile(file string) *CacheFileInfo {
         s := string(line)
         line, isPrefix, err = r.ReadLine()
 
-        if (s[0:4] == "KEY:") {
+        if (len(s) > 5 && s[0:4] == "KEY:") {
             info.key = s[5:len(s)]
             info.successful = true
 
@@ -64,7 +64,7 @@ func keyFromFile(file string) *CacheFileInfo {
         }
     }
     if isPrefix {
-        log.Println(errors.New("buffer size to small"))
+        log.Println(errors.New(fmt.Sprintf("buffer size to small: %s", file)))
         return info
     }
     if err != io.EOF {
