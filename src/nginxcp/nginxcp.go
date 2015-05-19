@@ -32,12 +32,13 @@ func loadInitial(cachePath string, keys *CacheKeys) {
         }
 
         count++
-        keys.addEntryFromFile(fmt.Sprintf("%s/%s", cachePath, info.Name()))
+        keys.addEntryFromFile(path)
 
         return nil
     })
 
     PrintInfo("Initial load found %d files", count)
+    keys.printKeyCounts()
 }
 
 func keyFromFile(file string) *CacheFileInfo {

@@ -54,7 +54,18 @@ func (ck *CacheKeys) printKeys() {
             }
         }
     }
+}
+
+func (ck *CacheKeys) printKeyCounts() {
+    ck.lock.Lock()
+    for domain, keys := range ck.keys {
+        PrintInfo("%s\t%d", domain, len(keys));
+    }
+    ck.lock.Unlock()
+    runtime.Gosched()
 }       
+
+       
 
 func (ck *CacheKeys) addEntryFromFile(file string) bool {
     var key = keyFromFile(file)
