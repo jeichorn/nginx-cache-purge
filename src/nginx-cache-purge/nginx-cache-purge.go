@@ -2,6 +2,7 @@ package main
 
 import (
     "flag"
+    "path/filepath"
 
     "nginxcp"
 )
@@ -13,6 +14,10 @@ func main() {
     flag.IntVar(&debug, "debug", 0, "Enable Debug")
     flag.StringVar(&path, "path", ".", "Path to watch")
     flag.Parse()
+
+    path = filepath.Clean(path)
+    path, _ = filepath.EvalSymlinks(path)
+    path, _ = filepath.Abs(path)
 
     nginxcp.Header()
     if (debug > 0) {
