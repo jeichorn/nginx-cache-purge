@@ -50,7 +50,7 @@ func (ck *CacheKeys) printKeys() {
     for domain, keys := range ck.keys {
         for key, files := range keys {
             for _, file := range files {
-                PrintTrace2(fmt.Sprintf("%s\t%s\t%s\n", domain, key, file));
+                PrintTrace2(fmt.Sprintf("%s\t%s\t%s", domain, key, file));
             }
         }
     }
@@ -60,7 +60,7 @@ func (ck *CacheKeys) addEntryFromFile(file string) bool {
     var key = keyFromFile(file)
     
     if (key.successful) {
-        PrintTrace1("New File: %s - %s://%s\n", file, key.domain, key.key)
+        PrintTrace1("New File: %s - %s://%s", file, key.domain, key.key)
         ck.addEntry(key.domain, key.key, file)
 
         return true
@@ -91,9 +91,12 @@ func (ck *CacheKeys) removeEntry(filename string, grabLock bool) bool {
             delete(ck.keys, item.domain)
         }
 
+        PrintTrace1("Delete File: %s - %s://%s", filename, item.domain, item.key)
         delete(ck.files, filename)
 
         status = true
+    } else {
+        PrintTrace2("files does not contain %s", filename)
     }
     if (grabLock) {
         ck.lock.Unlock()
@@ -119,7 +122,7 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
     regex = strings.Replace(regexp.QuoteMeta(regex), "\\(\\.\\*\\)", "(.*)", -1)
     regexString := fmt.Sprintf(`^([^-]+--)?(https?)?%s%s(\?.*)?$`, host, regex)
 
-    PrintInfo("Testing %s with %s\n", host, regexString)
+    PrintInfo("Testing %s with %s", host, regexString)
 
     tester, err := regexp.Compile(regexString)
 
@@ -133,16 +136,16 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
         for key, files := range ck.keys[host] {
             PrintTrace2(key)
             if (tester.MatchString(key)) {
-                PrintTrace1("Found a match: %s\n", key)
+                PrintTrace1("Found a match: %s", key)
                 for _, file := range files {
-                    PrintTrace2("Deleting: %s\n", file)
+                    PrintTrace2("Deleting: %s", file)
                     os.Remove(file)
                     ck.removeEntry(file, false)
                 }
             }
         }
     } else {
-        PrintDebug("No keys found for %s\n", host)
+        PrintDebug("No keys found for %s", host)
     }
     ck.lock.Unlock()
     runtime.Gosched()

@@ -9,6 +9,7 @@ import (
     "log"
     "errors"
     "regexp"
+    "strings"
 )
 
 type CacheFileInfo struct {
@@ -52,7 +53,7 @@ func keyFromFile(file string) *CacheFileInfo {
         line, isPrefix, err = r.ReadLine()
 
         if (len(s) > 5 && s[0:4] == "KEY:") {
-            info.key = s[5:len(s)]
+            info.key = strings.TrimRight(s[5:len(s)],"\n\r")
             info.successful = true
 
             matched := domainFromKey.FindAllStringSubmatch(info.key, -1)

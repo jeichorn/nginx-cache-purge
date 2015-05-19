@@ -3,6 +3,7 @@ package nginxcp
 
 import (
 	"fmt"
+    "log"
 
 	"github.com/koyachi/go-term-ansicolor/ansicolor"
 )
@@ -10,11 +11,11 @@ import (
 var DebugLevel int = 0
 
 func Header() {
-	fmt.Println(ansicolor.Cyan("Nginx-Cache-Purge 0.3.2 is watching for cache file changes"))
+	log.Println(ansicolor.Cyan("Nginx-Cache-Purge 0.3.2 is watching for cache file changes"))
 }
 
 func DebugEnabled() {
-	PrintInfo("Debug mode enabled.\n")
+	PrintInfo("Debug mode enabled level: %d", DebugLevel)
 }
 
 func PrintDebug(format string, a ...interface{}) {
@@ -22,12 +23,12 @@ func PrintDebug(format string, a ...interface{}) {
         return
     }
 	msg := fmt.Sprintf(format, a...)
-	fmt.Println(ansicolor.IntenseBlack(msg))
+	log.Println(ansicolor.IntenseBlack(msg))
 }
 
 func PrintInfo(format string, a ...interface{}) {
 	msg := fmt.Sprintf(format, a...)
-	fmt.Println(ansicolor.IntenseBlack(msg))
+	log.Println(ansicolor.Green(msg))
 }
 
 func PrintTrace1(format string, a ...interface{}) {
@@ -35,7 +36,7 @@ func PrintTrace1(format string, a ...interface{}) {
         return
     }
 	msg := fmt.Sprintf(format, a...)
-	fmt.Println(ansicolor.Black(msg))
+	log.Println(ansicolor.Black(msg))
 }
 
 func PrintTrace2(format string, a ...interface{}) {
@@ -43,12 +44,12 @@ func PrintTrace2(format string, a ...interface{}) {
         return
     }
 	msg := fmt.Sprintf(format, a...)
-	fmt.Println(ansicolor.Yellow(msg))
+	log.Println(ansicolor.Yellow(msg))
 }
 
 
 
 
 func PrintError(msg error) {
-	fmt.Println(ansicolor.IntenseRed(msg.Error()))
+	log.Println(ansicolor.IntenseRed(msg.Error()))
 }
