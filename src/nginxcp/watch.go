@@ -62,25 +62,25 @@ func (watcher *RecursiveWatcher) Run() {
                         PrintError(errors.New(event.Name))
 						PrintError(err)
 					} else if fi.IsDir() {
-						PrintTrace1("Detected new directory %s", event.Name)
+						PrintTrace2("Detected new directory %s", event.Name)
 						if !shouldIgnoreFile(filepath.Base(event.Name)) {
 							watcher.AddFolder(event.Name)
 						}
 					} else {
-						PrintTrace1("Detected new file %s", event.Name)
+						PrintTrace2("Detected new file %s", event.Name)
 						watcher.Files <- event.Name // created a file
 					}
 				}
 
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					// modified a file, assuming that you don't modify folders
-					PrintTrace1("Detected file modification %s", event.Name)
+					PrintTrace2("Detected file modification %s", event.Name)
 					watcher.Files <- event.Name
 				}
 
 				if event.Op&fsnotify.Remove == fsnotify.Remove {
 					// deleted a file
-					PrintTrace1("Detected file modification %s", event.Name)
+					PrintTrace2("Detected file modification %s", event.Name)
 					watcher.Files <- event.Name
 				}
 
