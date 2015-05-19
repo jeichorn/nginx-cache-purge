@@ -122,7 +122,6 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
     regex = strings.Replace(regexp.QuoteMeta(regex), "\\(\\.\\*\\)", "(.*)", -1)
     regexString := fmt.Sprintf(`^([^-]+--)?(https?)?%s%s(\?.*)?$`, host, regex)
 
-    PrintInfo("Testing %s with %s", host, regexString)
 
     tester, err := regexp.Compile(regexString)
 
@@ -133,17 +132,21 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
     ck.lock.Lock()
     _, ok := ck.keys[host]
     if (ok) {
+        PrintInfo("Testing %s (%d keys) with %s", host, len(ck.keys[host]), regexString)
+        var count int = 0
         for key, files := range ck.keys[host] {
             PrintTrace2(key)
             if (tester.MatchString(key)) {
                 PrintTrace1("Found a match: %s", key)
                 for _, file := range files {
                     PrintTrace2("Deleting: %s", file)
+                    count++
                     os.Remove(file)
                     ck.removeEntry(file, false)
                 }
             }
         }
+        PrintInfo("Deleted %d keys %s now has %d keys", count, host, len(ck.keys[host]))
     } else {
         PrintDebug("No keys found for %s", host)
     }
