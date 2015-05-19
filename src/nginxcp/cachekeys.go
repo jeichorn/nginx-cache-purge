@@ -60,7 +60,7 @@ func (ck *CacheKeys) addEntryFromFile(file string) bool {
     var key = keyFromFile(file)
     
     if (key.successful) {
-        PrintTrace2(fmt.Sprintf("Adding key %s for %s\n", key.key, file))
+        PrintTrace1("New File: %s - %s://%s\n", file, key.domain, key.key)
         ck.addEntry(key.domain, key.key, file)
 
         return true
