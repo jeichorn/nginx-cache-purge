@@ -25,15 +25,19 @@ var domainFromKey = regexp.MustCompile(`^[^-]+-[^-]*-(?:https?)?([^/?]+)`)
 
 func loadInitial(cachePath string, keys *CacheKeys) {
 
+    var count int = 0
     filepath.Walk(cachePath, func(path string, info os.FileInfo, err error) error {
         if (err != nil || info.IsDir()) {
             return nil
         }
 
+        count++
         keys.addEntryFromFile(fmt.Sprintf("%s/%s", cachePath, info.Name()))
 
         return nil
     })
+
+    PrintInfo("Initial load found %d files", count)
 }
 
 func keyFromFile(file string) *CacheFileInfo {
