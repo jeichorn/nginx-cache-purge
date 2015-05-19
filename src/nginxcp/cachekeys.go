@@ -7,11 +7,13 @@ import (
     "strings"
     "os"
     "errors"
+    "sync"
 )
 
 type CacheKeys struct {
     keys map[string]map[string]map[string]string
     files map[string]CacheItem
+    lock *sync.Mutex
 }
 
 type CacheItem struct {
@@ -23,10 +25,11 @@ type CacheItem struct {
 var splitJob = regexp.MustCompile(`^([^:]+)::(.+)$`)
 
 func NewCacheKeys() *CacheKeys {
-    return &CacheKeys{make(map[string]map[string]map[string]string), make(map[string]CacheItem)}
+    return &CacheKeys{make(map[string]map[string]map[string]string), make(map[string]CacheItem), &sync.Mutex{}}
 }
 
 func (ck *CacheKeys) addEntry(domain string, key string, file string) {
+    ck.lock.Lock()
     item := CacheItem{domain, key, file}
     ck.files[file] = item
     if _, ok := ck.keys[domain]; !ok {
@@ -38,6 +41,7 @@ func (ck *CacheKeys) addEntry(domain string, key string, file string) {
     ck.keys[domain][key][file] = file
 
     ck.printKeys()
+    ck.lock.Unlock()
 }
 
 func (ck *CacheKeys) printKeys() {
@@ -67,6 +71,8 @@ func (ck *CacheKeys) addEntryFromFile(file string) bool {
 }
 
 func (ck *CacheKeys) removeEntry(filename string) bool {
+    ck.lock.Lock()
+    var status bool = false
     _, ok := ck.files[filename]
     if (ok) {
         item := ck.files[filename]
@@ -83,9 +89,10 @@ func (ck *CacheKeys) removeEntry(filename string) bool {
 
         delete(ck.files, filename)
 
-        return true
+        status = true
     }
-    return false
+    ck.lock.Unlock()
+    return status
 }
 
 func (ck *CacheKeys) removeUsingJob(job string) bool {
@@ -113,6 +120,7 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
         log.Println("Bad regex", err)
     }
 
+    ck.lock.Lock()
     _, ok := ck.keys[host]
     if (ok) {
         for key, files := range ck.keys[host] {
@@ -129,6 +137,7 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
     } else {
         PrintDebug("No keys found for %s\n", host)
     }
+    ck.lock.Unlock()
 
     return true
 }
