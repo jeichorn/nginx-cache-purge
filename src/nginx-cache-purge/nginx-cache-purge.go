@@ -6,16 +6,17 @@ import (
     "nginxcp"
 )
 func main() {
-    var debug bool
+    var debug int
     var path string
 
 
-    flag.BoolVar(&debug, "debug", true, "Enable Debug")
+    flag.IntVar(&debug, "debug", 0, "Enable Debug")
     flag.StringVar(&path, "path", ".", "Path to watch")
     flag.Parse()
 
     nginxcp.Header()
-    if (debug) {
+    if (debug > 0) {
+        nginxcp.DebugLevel = debug
         nginxcp.DebugEnabled()
     }
 

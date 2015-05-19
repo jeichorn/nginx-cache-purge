@@ -3,7 +3,6 @@ package nginxcp
 import(
     "gopkg.in/redis.v3"
     "time"
-    "fmt"
 )
 
 type RedisQueue struct {
@@ -37,7 +36,7 @@ func (queue *RedisQueue) Run() {
             if (job == "") {
                 time.Sleep(1 * time.Second)
             } else {
-                DebugMessage(fmt.Sprintf("Adding a job to the channel: %#v\n", job))
+                PrintTrace2("Adding a job to the channel: %#v\n", job)
                 queue.Jobs <- job
             }
         } else {

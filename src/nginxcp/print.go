@@ -7,40 +7,48 @@ import (
 	"github.com/koyachi/go-term-ansicolor/ansicolor"
 )
 
+var DebugLevel int = 0
+
 func Header() {
 	fmt.Println(ansicolor.Cyan("Nginx-Cache-Purge 0.3.2 is watching for cache file changes"))
 }
 
 func DebugEnabled() {
-	DebugMessage("Debug mode enabled.\n")
+	PrintInfo("Debug mode enabled.\n")
 }
 
-func DebugMessage(format string, a ...interface{}) {
+func PrintDebug(format string, a ...interface{}) {
+    if (DebugLevel == 0) {
+        return
+    }
 	msg := fmt.Sprintf(format, a...)
 	fmt.Println(ansicolor.IntenseBlack(msg))
 }
 
-func DebugError(msg error) {
-	fmt.Println(ansicolor.IntenseBlack(msg.Error()))
+func PrintInfo(format string, a ...interface{}) {
+	msg := fmt.Sprintf(format, a...)
+	fmt.Println(ansicolor.IntenseBlack(msg))
 }
 
-func DisplayHelp() {
+func PrintTrace1(format string, a ...interface{}) {
+    if (DebugLevel < 2) {
+        return
+    }
+	msg := fmt.Sprintf(format, a...)
+	fmt.Println(ansicolor.Black(msg))
 }
 
-func PrintWatching(folder string) {
-	ClearPrompt()
-	fmt.Println(ansicolor.Yellow("Watching path"), ansicolor.Yellow(folder))
+func PrintTrace2(format string, a ...interface{}) {
+    if (DebugLevel < 3) {
+        return
+    }
+	msg := fmt.Sprintf(format, a...)
+	fmt.Println(ansicolor.Yellow(msg))
 }
 
-func UnknownCommand(command string) {
-	fmt.Println(ansicolor.Red("ERROR:")+" Unknown command", ansicolor.Magenta(command))
-}
 
-const CSI = "\x1b["
 
-// remove from the screen anything that's been typed
-// from github.com/kierdavis/ansi
-func ClearPrompt() {
-	fmt.Printf("%s2K", CSI)     // clear line
-	fmt.Printf("%s%dG", CSI, 0) // go to column 0
+
+func PrintError(msg error) {
+	fmt.Println(ansicolor.IntenseRed(msg.Error()))
 }

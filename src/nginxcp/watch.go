@@ -20,7 +20,7 @@ type RecursiveWatcher struct {
 }
 
 func NewRecursiveWatcher(path string) (*RecursiveWatcher, error) {
-    DebugMessage(fmt.Sprintf("Watching %s", path))
+    PrintInfo(fmt.Sprintf("Watching %s", path))
 	folders := Subfolders(path)
 	if len(folders) == 0 {
 		return nil, errors.New("No folders to watch.")
@@ -49,7 +49,7 @@ func (watcher *RecursiveWatcher) AddFolder(folder string) {
 	watcher.Folders <- folder
 }
 
-func (watcher *RecursiveWatcher) Run(debug bool) {
+func (watcher *RecursiveWatcher) Run() {
 	go func() {
 		for {
 			select {
@@ -59,38 +59,28 @@ func (watcher *RecursiveWatcher) Run(debug bool) {
 					fi, err := os.Stat(event.Name)
 					if err != nil {
 						// eg. stat .subl513.tmp : no such file or directory
-						if debug {
-                            DebugMessage(event.Name)
-							DebugError(err)
-						}
+                        PrintError(errors.New(event.Name))
+						PrintError(err)
 					} else if fi.IsDir() {
-						if debug {
-							DebugMessage("Detected new directory %s", event.Name)
-						}
+						PrintTrace1("Detected new directory %s", event.Name)
 						if !shouldIgnoreFile(filepath.Base(event.Name)) {
 							watcher.AddFolder(event.Name)
 						}
 					} else {
-						if debug {
-							DebugMessage("Detected new file %s", event.Name)
-						}
+						PrintTrace1("Detected new file %s", event.Name)
 						watcher.Files <- event.Name // created a file
 					}
 				}
 
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					// modified a file, assuming that you don't modify folders
-					if debug {
-						DebugMessage("Detected file modification %s", event.Name)
-					}
+					PrintTrace1("Detected file modification %s", event.Name)
 					watcher.Files <- event.Name
 				}
 
 				if event.Op&fsnotify.Remove == fsnotify.Remove {
 					// deleted a file
-					if debug {
-						DebugMessage("Detected file modification %s", event.Name)
-					}
+					PrintTrace1("Detected file modification %s", event.Name)
 					watcher.Files <- event.Name
 				}
 

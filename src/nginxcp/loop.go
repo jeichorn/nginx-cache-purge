@@ -4,14 +4,14 @@ import (
     "log"
 )
 
-func EventLoop(path string, keys *CacheKeys, debug bool) {
+func EventLoop(path string, keys *CacheKeys, debug int) {
     watcher, err := NewRecursiveWatcher(path)
     if err != nil {
         log.Fatal(err)
     }
 
     queue := NewRedisQueue()
-    watcher.Run(debug)
+    watcher.Run()
     loadInitial(path, keys)
     go queue.Run()
     defer watcher.Close()

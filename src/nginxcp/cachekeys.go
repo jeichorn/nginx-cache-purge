@@ -6,6 +6,7 @@ import (
     "log"
     "strings"
     "os"
+    "errors"
 )
 
 type CacheKeys struct {
@@ -43,7 +44,7 @@ func (ck *CacheKeys) printKeys() {
     for domain, keys := range ck.keys {
         for key, files := range keys {
             for _, file := range files {
-                DebugMessage(fmt.Sprintf("%s\t%s\t%s\n", domain, key, file));
+                PrintTrace2(fmt.Sprintf("%s\t%s\t%s\n", domain, key, file));
             }
         }
     }
@@ -53,7 +54,7 @@ func (ck *CacheKeys) addEntryFromFile(file string) bool {
     var key = keyFromFile(file)
     
     if (key.successful) {
-        DebugMessage(fmt.Sprintf("Adding key %s for %s\n", key.key, file))
+        PrintTrace2(fmt.Sprintf("Adding key %s for %s\n", key.key, file))
         ck.addEntry(key.domain, key.key, file)
 
         return true
@@ -97,14 +98,14 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
         host = string(matched[0][1])
         regex = string(matched[0][2])
     } else {
-        DebugMessage(fmt.Sprintf("Bad Job: %s", job))
+        PrintError(errors.New(fmt.Sprintf("Bad Job: %s", job)))
         return false
     }
 
     regex = strings.Replace(regexp.QuoteMeta(regex), "\\(\\.\\*\\)", "(.*)", -1)
     regexString := fmt.Sprintf(`^([^-]+--)?(https?)?%s%s(\?.*)?$`, host, regex)
 
-    DebugMessage("Testing %s with %s\n", host, regexString)
+    PrintInfo("Testing %s with %s\n", host, regexString)
 
     tester, err := regexp.Compile(regexString)
 
@@ -115,18 +116,18 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
     _, ok := ck.keys[host]
     if (ok) {
         for key, files := range ck.keys[host] {
-            DebugMessage(key)
+            PrintTrace2(key)
             if (tester.MatchString(key)) {
-                DebugMessage(fmt.Sprintf("Found a match: %s\n", key))
+                PrintTrace1("Found a match: %s\n", key)
                 for _, file := range files {
-                    DebugMessage(fmt.Sprintf("Deleting: %s\n", file))
+                    PrintTrace2("Deleting: %s\n", file)
                     os.Remove(file)
                     ck.removeEntry(file)
                 }
             }
         }
     } else {
-        DebugMessage(fmt.Sprintf("No keys found for %s\n", host))
+        PrintDebug("No keys found for %s\n", host)
     }
 
     return true
