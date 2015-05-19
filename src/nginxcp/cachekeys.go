@@ -8,6 +8,7 @@ import (
     "os"
     "errors"
     "sync"
+    "runtime"
 )
 
 type CacheKeys struct {
@@ -42,6 +43,7 @@ func (ck *CacheKeys) addEntry(domain string, key string, file string) {
 
     ck.printKeys()
     ck.lock.Unlock()
+    runtime.Gosched()
 }
 
 func (ck *CacheKeys) printKeys() {
@@ -64,14 +66,16 @@ func (ck *CacheKeys) addEntryFromFile(file string) bool {
         return true
     }
     if (key.deleted) {
-        ck.removeEntry(file)
+        ck.removeEntry(file, true)
     }
 
     return false
 }
 
-func (ck *CacheKeys) removeEntry(filename string) bool {
-    ck.lock.Lock()
+func (ck *CacheKeys) removeEntry(filename string, grabLock bool) bool {
+    if (grabLock) {
+        ck.lock.Lock()
+    }
     var status bool = false
     _, ok := ck.files[filename]
     if (ok) {
@@ -91,7 +95,10 @@ func (ck *CacheKeys) removeEntry(filename string) bool {
 
         status = true
     }
-    ck.lock.Unlock()
+    if (grabLock) {
+        ck.lock.Unlock()
+        runtime.Gosched()
+    }
     return status
 }
 
@@ -130,7 +137,7 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
                 for _, file := range files {
                     PrintTrace2("Deleting: %s\n", file)
                     os.Remove(file)
-                    ck.removeEntry(file)
+                    ck.removeEntry(file, false)
                 }
             }
         }
@@ -138,6 +145,7 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
         PrintDebug("No keys found for %s\n", host)
     }
     ck.lock.Unlock()
+    runtime.Gosched()
 
     return true
 }
