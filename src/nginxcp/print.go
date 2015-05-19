@@ -9,9 +9,10 @@ import (
 )
 
 var DebugLevel int = 0
+var AnsiOutput bool =true 
 
 func Header() {
-	log.Println(ansicolor.Cyan("Nginx-Cache-Purge 0.3.2 is watching for cache file changes"))
+    PrintInfo("Nginx-Cache-Purge 0.3.2 is watching for cache file changes")
 }
 
 func DebugEnabled() {
@@ -22,34 +23,50 @@ func PrintDebug(format string, a ...interface{}) {
     if (DebugLevel == 0) {
         return
     }
-	msg := fmt.Sprintf(format, a...)
-	log.Println(ansicolor.IntenseBlack(msg))
+	var msg string = fmt.Sprintf(format, a...)
+    if (AnsiOutput) {
+        msg = ansicolor.IntenseBlack(msg)
+    }
+	log.Println(msg)
 }
 
 func PrintInfo(format string, a ...interface{}) {
-	msg := fmt.Sprintf(format, a...)
-	log.Println(ansicolor.Green(msg))
+	var msg string = fmt.Sprintf(format, a...)
+    if (AnsiOutput) {
+        msg = ansicolor.Green(msg)
+    }
+	log.Println(msg)
 }
 
 func PrintTrace1(format string, a ...interface{}) {
     if (DebugLevel < 2) {
         return
     }
-	msg := fmt.Sprintf(format, a...)
-	log.Println(ansicolor.Black(msg))
+	var msg string = fmt.Sprintf(format, a...)
+    if (AnsiOutput) {
+        msg = ansicolor.Black(msg)
+    }
+	log.Println(msg)
 }
 
 func PrintTrace2(format string, a ...interface{}) {
     if (DebugLevel < 3) {
         return
     }
-	msg := fmt.Sprintf(format, a...)
-	log.Println(ansicolor.Yellow(msg))
+	var msg = fmt.Sprintf(format, a...)
+    if (AnsiOutput) {
+        msg = ansicolor.Yellow(msg)
+    }
+	log.Println(msg)
 }
 
 
 
 
 func PrintError(msg error) {
-	log.Println(ansicolor.IntenseRed(msg.Error()))
+    var out string = msg.Error()
+    if (AnsiOutput) {
+        out = ansicolor.IntenseRed(out)
+    }
+	log.Println(out)
 }
