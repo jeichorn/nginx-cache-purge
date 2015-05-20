@@ -22,6 +22,7 @@ func EventLoop(path string, keys *CacheKeys, debug int) {
             keys.addEntryFromFile(file)
         case job := <-queue.Jobs:
             keys.removeUsingJob(job)
+            queue.completeJob(job)
         }
 
     }

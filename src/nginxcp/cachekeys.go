@@ -158,6 +158,7 @@ func (ck *CacheKeys) removeUsingJob(job string) bool {
             }
         }
         PrintInfo("Deleted %d keys %s now has %d keys", count, host, len(ck.keys[host]))
+
     } else {
         PrintDebug("No keys found for %s", host)
     }
