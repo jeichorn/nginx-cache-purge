@@ -54,6 +54,9 @@ func (watcher *RecursiveWatcher) Run() {
 		for {
 			select {
 			case event := <-watcher.Events:
+                if shouldIgnoreFile(filepath.Base(event.Name)) {
+                    continue
+                }
 				// create a file/directory
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					fi, err := os.Stat(event.Name)
@@ -62,13 +65,11 @@ func (watcher *RecursiveWatcher) Run() {
                         PrintError(errors.New(event.Name))
 						PrintError(err)
 					} else if fi.IsDir() {
-						PrintTrace2("Detected new directory %s", event.Name)
-						if !shouldIgnoreFile(filepath.Base(event.Name)) {
-							watcher.AddFolder(event.Name)
-						}
+                        PrintTrace2("Detected new directory %s", event.Name)
+                        watcher.AddFolder(event.Name)
 					} else {
-						PrintTrace2("Detected new file %s", event.Name)
-						watcher.Files <- event.Name // created a file
+                        PrintTrace2("Detected new file %s", event.Name)
+                        watcher.Files <- event.Name // created a file
 					}
 				}
 

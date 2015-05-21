@@ -19,6 +19,8 @@ type CacheFileInfo struct {
     successful bool
 }
 
+var Version string = "2.0.4"
+
 // standard--woocommerce.bluga.info/grid-3-column/?
 // standard--httpswww.bit9.com/forms/free-antivirus-plus-endpoint-protection/?campaign=70180000000f5DK
 var domainFromKey = regexp.MustCompile(`^[^-]+-[^-]*-(?:https?)?([^/?]+)`)

@@ -2,9 +2,15 @@ package nginxcp;
 
 import (
     "log"
+    "fmt"
+    "os"
 )
 
 func EventLoop(path string, keys *CacheKeys, debug int) {
+    var pingFile string = fmt.Sprintf("%s/ping", path)
+    os.Remove(pingFile)
+    os.Remove(fmt.Sprintf("%s/.ping", path))
+
     watcher, err := NewRecursiveWatcher(path)
     if err != nil {
         log.Fatal(err)
@@ -15,6 +21,10 @@ func EventLoop(path string, keys *CacheKeys, debug int) {
     loadInitial(path, keys)
     go queue.Run()
     defer watcher.Close()
+    ping := Ping{}
+
+    go ping.Run(pingFile, keys)
+    go Info(keys)
 
     for {
         select {

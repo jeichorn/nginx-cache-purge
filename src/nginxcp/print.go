@@ -12,7 +12,7 @@ var DebugLevel int = 0
 var AnsiOutput bool =true 
 
 func Header() {
-    PrintInfo("Nginx-Cache-Purge 0.3.2 is watching for cache file changes")
+    PrintInfo("Nginx-Cache-Purge %s", Version)
 }
 
 func DebugEnabled() {
@@ -59,6 +59,17 @@ func PrintTrace2(format string, a ...interface{}) {
     }
 	log.Println(msg)
 }
+func PrintTrace3(format string, a ...interface{}) {
+    if (DebugLevel < 4) {
+        return
+    }
+	var msg = fmt.Sprintf(format, a...)
+    if (AnsiOutput) {
+        msg = ansicolor.Blue(msg)
+    }
+	log.Println(msg)
+}
+
 
 
 

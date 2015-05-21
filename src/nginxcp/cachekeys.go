@@ -50,7 +50,7 @@ func (ck *CacheKeys) printKeys() {
     for domain, keys := range ck.keys {
         for key, files := range keys {
             for _, file := range files {
-                PrintTrace2(fmt.Sprintf("%s\t%s\t%s", domain, key, file));
+                PrintTrace3(fmt.Sprintf("%s\t%s\t%s", domain, key, file));
             }
         }
     }
@@ -81,6 +81,18 @@ func (ck *CacheKeys) addEntryFromFile(file string) bool {
     }
 
     return false
+}
+
+func (ck *CacheKeys) getFile(filename string) CacheItem {
+    ck.lock.Lock()
+    var item CacheItem = CacheItem{};
+    _, ok := ck.files[filename]
+    if (ok) {
+        item = ck.files[filename]
+    }
+    ck.lock.Unlock()
+
+    return item
 }
 
 func (ck *CacheKeys) removeEntry(filename string, grabLock bool) bool {
