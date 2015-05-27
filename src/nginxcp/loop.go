@@ -11,6 +11,7 @@ func EventLoop(path string, debug int) {
     os.Remove(fmt.Sprintf("%s/.ping", path))
 
     queue := NewRedisQueue()
+    queue.clearInPurgeList()
     go queue.Run()
     
     purge := NewPurge(path)

@@ -26,9 +26,14 @@ func (queue *RedisQueue) completeJob(job string) {
     queue.client.HDel("in_purge_list", job)
 }
 
+func (queue *RedisQueue) clearInPurgeList() {
+    queue.client.Del("in_purge_list")
+}
+
 func (queue *RedisQueue) Run() {
     for {
         job := queue.getJob()
+        queue.completeJob(job)
 
         if (job == "") {
             time.Sleep(1 * time.Second)
