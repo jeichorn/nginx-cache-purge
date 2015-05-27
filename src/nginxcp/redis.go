@@ -7,15 +7,13 @@ import(
 
 type RedisQueue struct {
     client *redis.Client
-    Active bool
     Jobs chan string
 }
 
 func NewRedisQueue() *RedisQueue {
     client := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
 
-    // load initial needs to set active true, instead of setting it here
-    return &RedisQueue{client, true, make(chan string, 10)}
+    return &RedisQueue{client, make(chan string, 10)}
 }
 
 func (queue *RedisQueue) getJob() string {
@@ -30,17 +28,13 @@ func (queue *RedisQueue) completeJob(job string) {
 
 func (queue *RedisQueue) Run() {
     for {
-        if (queue.Active) {
-            job := queue.getJob()
+        job := queue.getJob()
 
-            if (job == "") {
-                time.Sleep(1 * time.Second)
-            } else {
-                PrintTrace2("Adding a job to the channel: %#v\n", job)
-                queue.Jobs <- job
-            }
-        } else {
+        if (job == "") {
             time.Sleep(1 * time.Second)
+        } else {
+            PrintTrace2("Adding a job to the channel: %#v\n", job)
+            queue.Jobs <- job
         }
     }
 }

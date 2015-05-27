@@ -28,6 +28,5 @@ func main() {
         nginxcp.DebugEnabled()
     }
 
-    cachekeys := nginxcp.NewCacheKeys()
-    nginxcp.EventLoop(path, cachekeys, debug)
+    nginxcp.EventLoop(path, debug)
 }
