@@ -33,7 +33,7 @@ func (queue *RedisQueue) Run() {
         if (job == "") {
             time.Sleep(1 * time.Second)
         } else {
-            PrintTrace2("Adding a job to the channel: %#v\n", job)
+            PrintTrace3("Adding a job to the channel: %#v\n", job)
             queue.Jobs <- job
         }
     }

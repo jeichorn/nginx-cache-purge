@@ -57,6 +57,8 @@ func (purge *Purge) Purge(job string) {
             PrintTrace1("Found a match: %s", key.key)
             os.Remove(path)
             deleted++
+        } else {
+            PrintTrace2("Miss: %s", key.key)
         }
         count++
 
