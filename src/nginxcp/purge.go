@@ -8,6 +8,12 @@ import (
     "strings"
     "os"
     "errors"
+    "time"
+
+    "github.com/wayn3h0/go-caching"
+    "github.com/wayn3h0/go-caching/container/concurrent"
+    "github.com/wayn3h0/go-caching/container/memory"
+    _ "github.com/wayn3h0/go-caching/container/memory/arc"
 )
 
 var jobSplitter = regexp.MustCompile(`^([^:]+)::(.+)$`)
@@ -15,10 +21,14 @@ var jobSplitter = regexp.MustCompile(`^([^:]+)::(.+)$`)
 type Purge struct {
     Path string
     Jobs chan string
+    Cache *caching.Cache
 }
 
 func NewPurge(path string) *Purge {
-    return &Purge{path, make(chan string, 10)}
+    arc := memory.ARC.New(1000)
+    concurrent := concurrent.New(arc)
+    cache := caching.NewCache(concurrent)
+    return &Purge{path, make(chan string, 10), cache}
 }
 
 func (purge *Purge) Purge(job string) {
@@ -51,14 +61,28 @@ func (purge *Purge) Purge(job string) {
             return nil
         }
 
-        key := keyFromFile(path)
+        item, err := purge.Cache.Get(path)
+        if (err != nil) {
+            PrintError(err)
+        }
+        var key string = "BADKEY"
+        if (item != nil) {
+            PrintInfo("Got %#v from cache", item)
+            if str, ok := item.(string); ok {
+                key = str
+            }
+        } else {
+            info := keyFromFile(path)
+            key = info.key
+            purge.Cache.Set(path, key, caching.NewExpiration(time.Now(), time.Minute * 30))
+        }
 
-        if (tester.MatchString(key.key)) {
-            PrintTrace1("Found a match: %s", key.key)
+        if (tester.MatchString(key)) {
+            PrintTrace1("Found a match: %s", key)
             os.Remove(path)
             deleted++
         } else {
-            PrintTrace2("Miss: %s", key.key)
+            PrintTrace3("Miss: %s", key)
         }
         count++
 

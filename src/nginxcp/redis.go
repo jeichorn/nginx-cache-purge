@@ -33,12 +33,14 @@ func (queue *RedisQueue) clearInPurgeList() {
 func (queue *RedisQueue) Run() {
     for {
         job := queue.getJob()
-        queue.completeJob(job)
+        if (job != "") {
+            queue.completeJob(job)
+        }
 
         if (job == "") {
             time.Sleep(1 * time.Second)
         } else {
-            PrintTrace3("Adding a job to the channel: %#v\n", job)
+            PrintTrace2("Adding a job to the channel: %#v\n", job)
             queue.Jobs <- job
         }
     }
