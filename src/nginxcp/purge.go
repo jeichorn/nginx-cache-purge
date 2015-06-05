@@ -10,10 +10,10 @@ import (
     "errors"
     "time"
 
-    "github.com/wayn3h0/go-caching"
-    "github.com/wayn3h0/go-caching/container/concurrent"
-    "github.com/wayn3h0/go-caching/container/memory"
-    _ "github.com/wayn3h0/go-caching/container/memory/arc"
+    "github.com/jeichorn/go-caching"
+    "github.com/jeichorn/go-caching/container/concurrent"
+    "github.com/jeichorn/go-caching/container/memory"
+    _ "github.com/jeichorn/go-caching/container/memory/arc"
 )
 
 var jobSplitter = regexp.MustCompile(`^([^:]+)::(.+)$`)
@@ -25,7 +25,7 @@ type Purge struct {
 }
 
 func NewPurge(path string) *Purge {
-    arc := memory.ARC.New(1000)
+    arc := memory.ARC.New(100000)
     concurrent := concurrent.New(arc)
     cache := caching.NewCache(concurrent)
     return &Purge{path, make(chan string, 10), cache}
@@ -72,9 +72,10 @@ func (purge *Purge) Purge(job string) {
                 key = str
             }
         } else {
+            PrintTrace2("Cache Miss: %s", path)
             info := keyFromFile(path)
             key = info.key
-            purge.Cache.Set(path, key, caching.NewExpiration(time.Now(), time.Minute * 30))
+            purge.Cache.Set(path, key, caching.NewExpiration(time.Now().Add(time.Minute * 30), time.Minute * 30))
         }
 
         if (tester.MatchString(key)) {

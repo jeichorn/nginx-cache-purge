@@ -4,7 +4,7 @@ export GOPATH=/home/jeichorn/git/nginx-cache-purge
 go get github.com/go-fsnotify/fsnotify
 go get github.com/koyachi/go-term-ansicolor/ansicolor
 go get gopkg.in/redis.v3
-go get github.com/wayn3h0/go-caching
+go get github.com/jeichorn/go-caching
 cd $GOPATH
 cd src/nginxcp
 go build -v
