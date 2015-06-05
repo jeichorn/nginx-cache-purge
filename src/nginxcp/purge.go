@@ -20,7 +20,7 @@ var jobSplitter = regexp.MustCompile(`^([^:]+)::(.+)$`)
 
 type Purge struct {
     Path string
-    Jobs chan string
+    Jobs chan JobBag
     Cache *caching.Cache
 }
 
@@ -28,34 +28,11 @@ func NewPurge(path string) *Purge {
     arc := memory.ARC.New(100000)
     concurrent := concurrent.New(arc)
     cache := caching.NewCache(concurrent)
-    return &Purge{path, make(chan string, 10), cache}
+    return &Purge{path, make(chan JobBag, 10), cache}
 }
 
-func (purge *Purge) Purge(job string) {
-    PrintInfo("Purge job %s", job)
-    matched := jobSplitter.FindAllStringSubmatch(job, -1)
-    var host string
-    var regex string
-    if (len(matched) == 1 && len(matched[0]) == 3) {
-        host = string(matched[0][1])
-        regex = string(matched[0][2])
-    } else {
-        PrintError(errors.New(fmt.Sprintf("Bad Job: %s", job)))
-        return
-    }
-
-    regex = strings.Replace(regexp.QuoteMeta(regex), "\\(\\.\\*\\)", "(.*)", -1)
-    regexString := fmt.Sprintf(`^([^-]+--)?(https?)?%s%s(\?.*)?$`, host, regex)
-
-    tester, err := regexp.Compile(regexString)
-
-    if (err != nil) {
-        log.Println("Bad regex", err)
-    }
-
-
-    var count int = 0
-    var deleted int = 0;
+func (purge *Purge) Purge(jobs JobBag) {
+    var list map[string]map[string]map[string]int = make(map[string]map[string]map[string]int)
     filepath.Walk(purge.Path, func(path string, info os.FileInfo, err error) error {
         if (err != nil || info.IsDir()) {
             return nil
@@ -66,31 +43,84 @@ func (purge *Purge) Purge(job string) {
             PrintError(err)
         }
         var key string = "BADKEY"
+        var domain string = "BADDOMAIN"
         if (item != nil) {
-            PrintInfo("Got %#v from cache", item)
-            if str, ok := item.(string); ok {
-                key = str
+            PrintTrace3("Got %#v from cache", item)
+            if info, ok := item.(*CacheFileInfo); ok {
+                key = info.key
+                domain = info.domain
             }
         } else {
             PrintTrace2("Cache Miss: %s", path)
             info := keyFromFile(path)
             key = info.key
-            purge.Cache.Set(path, key, caching.NewExpiration(time.Now().Add(time.Minute * 30), time.Minute * 30))
+            domain = info.domain
+            purge.Cache.Set(path, info, caching.NewExpiration(time.Now().Add(time.Minute * 30), time.Minute * 30))
         }
-
-        if (tester.MatchString(key)) {
-            PrintTrace1("Found a match: %s", key)
-            os.Remove(path)
-            deleted++
-        } else {
-            PrintTrace3("Miss: %s", key)
+        if _, ok := list[domain]; !ok {
+            list[domain] = make(map[string]map[string]int)
         }
-        count++
-
+        if _, ok := list[domain][key]; !ok {
+            list[domain][key] = make(map[string]int)
+        }
+        list[domain][key][path] = 1
         return nil
     })
 
-    PrintInfo("Tested %d files deleted %d, %s", count, deleted, job)
+    for _, job := range jobs.Bag {
+        matched := jobSplitter.FindAllStringSubmatch(job, -1)
+        var host string
+        var regex string
+        if (len(matched) == 1 && len(matched[0]) == 3) {
+            host = string(matched[0][1])
+            regex = string(matched[0][2])
+        } else {
+            PrintError(errors.New(fmt.Sprintf("Bad Job: %s", job)))
+            continue
+        }
+
+        PrintInfo("Purge job %s %s", host, regex)
+
+        regex = strings.Replace(regexp.QuoteMeta(regex), "\\(\\.\\*\\)", "(.*)", -1)
+        regexString := fmt.Sprintf(`^([^-]+--)?(https?)?%s%s(\?.*)?$`, host, regex)
+
+        tester, err := regexp.Compile(regexString)
+
+        if (err != nil) {
+            log.Println("Bad regex", err)
+        }
+
+
+        var count int = 0
+        var deleted int = 0;
+
+
+        // check if the host exists at all, if it doesn't we can bail right away
+        if _, ok := list[host]; !ok {
+            PrintTrace1("No keys for: %s", host)
+        } else {
+            for domain, keys := range list {
+                if (domain != host) {
+                    continue;
+                }
+
+                for key, files := range keys {
+                    if (tester.MatchString(key)) {
+                        PrintTrace1("Found a match: %s", key)
+                        for file, _ := range files {
+                            os.Remove(file)
+                            deleted++
+                        }
+                    } else {
+                        PrintTrace3("Miss: %s", key)
+                    }
+                    count+=len(files)
+                }
+            }
+        }
+
+        PrintInfo("Tested %d files deleted %d, %s", count, deleted, job)
+    }
 }
 
 func (purge *Purge) Run() {
