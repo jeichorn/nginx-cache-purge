@@ -46,7 +46,7 @@ func (queue *RedisQueue) Run() {
 
         if (job == "" || bag.Count > 10) {
             if (bag.Count > 0) {
-                PrintTrace1("Adding %d jobs to the channel: %#v\n", bag.Count, bag)
+                PrintTrace2("Adding %d jobs to the channel: %#v\n", bag.Count, bag)
                 queue.Jobs <- bag
                 bag.Bag = make([]string, 0)
                 bag.Count = 0
