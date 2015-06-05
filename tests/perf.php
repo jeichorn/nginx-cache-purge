@@ -1,7 +1,7 @@
 <?php
 
 $tmp = "/tmp/nginxcp-test";
-$files = 1000;
+$files = 10000;
 $fileHeader = file_get_contents(__DIR__.'/cache-file-header.txt');
 $domain = "test.com";
 $iterations = 5;
@@ -29,7 +29,7 @@ for($i = 0; $i < $iterations; $i++)
     echo "Round $i\n";
     buildCache($tmp, $files, $fileHeader, $domain);
     $t1 = microtime(true);
-    for($c = 0; $c < ($files/10); $c++)
+    for($c = 0; $c < min(1000, $files/10); $c++)
     {
         $file = str_pad(dechex($c), 10, 'a', STR_PAD_LEFT);
         $redis->lpush("purge_list", "$domain::/$file");
