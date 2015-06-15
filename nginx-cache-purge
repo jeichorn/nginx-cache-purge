@@ -32,6 +32,12 @@ $cache = new Cache($CACHE_PATH);
 $inotify = new Inotify($CACHE_PATH);
 $queue = new Queue($predis);
 
+// I suspect it's possible to get killed half-way through processing a job,
+// where we popped it from the queue but haven't cleared out the
+// in_purge_list. nginx will stop accepting any new jobs for that purge, and
+// we end up in a deadlock.
+$predis->del("in_purge_list");
+
 // get the keys already in the cache before we started inotify
 echo date('Y-m-d H:i:s')." - Scanning cache\n";
 $cache->scan($CACHE_PATH);
