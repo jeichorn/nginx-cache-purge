@@ -25,7 +25,7 @@ type Purge struct {
 }
 
 func NewPurge(path string) *Purge {
-    arc := memory.ARC.New(100000)
+    arc := memory.ARC.New(300000)
     concurrent := concurrent.New(arc)
     cache := caching.NewCache(concurrent)
     return &Purge{path, make(chan JobBag, 10), cache}
