@@ -19,6 +19,7 @@ type CacheKeys struct {
 
 type CacheItem struct {
     domain string
+    altdomain string
     key string
     file string 
 }
@@ -29,9 +30,9 @@ func NewCacheKeys() *CacheKeys {
     return &CacheKeys{make(map[string]map[string]map[string]string), make(map[string]CacheItem), &sync.Mutex{}}
 }
 
-func (ck *CacheKeys) addEntry(domain string, key string, file string) {
+func (ck *CacheKeys) addEntry(domain string, altDomain string, key string, file string) {
     ck.lock.Lock()
-    item := CacheItem{domain, key, file}
+    item := CacheItem{domain, altDomain, key, file}
     ck.files[file] = item
     if _, ok := ck.keys[domain]; !ok {
         ck.keys[domain] = make(map[string]map[string]string)
@@ -72,7 +73,7 @@ func (ck *CacheKeys) addEntryFromFile(file string) bool {
     
     if (key.successful) {
         PrintTrace1("New File: %s - %s://%s", file, key.domain, key.key)
-        ck.addEntry(key.domain, key.key, file)
+        ck.addEntry(key.domain, key.altdomain, key.key, file)
 
         return true
     }

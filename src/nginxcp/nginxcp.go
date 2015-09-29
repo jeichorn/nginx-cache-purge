@@ -15,6 +15,7 @@ import (
 type CacheFileInfo struct {
     key string
     domain string
+    altdomain string
     deleted bool
     successful bool
 }
@@ -23,7 +24,7 @@ var Version string = "2.0.4"
 
 // standard--woocommerce.bluga.info/grid-3-column/?
 // standard--httpswww.bit9.com/forms/free-antivirus-plus-endpoint-protection/?campaign=70180000000f5DK
-var domainFromKey = regexp.MustCompile(`^[^-]+-[^-]*-(?:https?)?([^/?]+)`)
+var domainFromKey = regexp.MustCompile(`^[^-]+-[^-]*-(https?)?([^/?]+)`)
 
 func loadInitial(cachePath string, keys *CacheKeys) {
 
@@ -64,8 +65,14 @@ func keyFromFile(file string) *CacheFileInfo {
             info.successful = true
 
             matched := domainFromKey.FindAllStringSubmatch(info.key, -1)
-            if (len(matched) == 1 && len(matched[0]) == 2) {
-                info.domain = string(matched[0][1])
+            PrintTrace4("regex match %#v", matched)
+            if (len(matched) == 1 && len(matched[0]) == 3) {
+                info.domain = string(matched[0][2])
+                if (matched[0][1] == "https") {
+                    info.altdomain = fmt.Sprintf("%s%s", "s", string(matched[0][2]))
+                } else {
+                    info.altdomain = info.domain
+                }
             }
 
             return info

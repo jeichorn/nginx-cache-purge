@@ -69,6 +69,17 @@ func PrintTrace3(format string, a ...interface{}) {
     }
 	log.Println(msg)
 }
+func PrintTrace4(format string, a ...interface{}) {
+    if (DebugLevel < 5) {
+        return
+    }
+	var msg = fmt.Sprintf(format, a...)
+    if (AnsiOutput) {
+        msg = ansicolor.Blue(msg)
+    }
+	log.Println(msg)
+}
+
 
 
 

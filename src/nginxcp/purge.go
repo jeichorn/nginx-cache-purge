@@ -44,17 +44,20 @@ func (purge *Purge) Purge(jobs JobBag) {
         }
         var key string = "BADKEY"
         var domain string = "BADDOMAIN"
+        var altdomain string = "BADDOMAIN"
         if (item != nil) {
             PrintTrace3("Got %#v from cache", item)
             if info, ok := item.(*CacheFileInfo); ok {
                 key = info.key
                 domain = info.domain
+                altdomain = info.altdomain
             }
         } else {
             PrintTrace2("Cache Miss: %s", path)
             info := keyFromFile(path)
             key = info.key
             domain = info.domain
+            altdomain = info.altdomain
             purge.Cache.Set(path, info, caching.NewExpiration(time.Now().Add(time.Minute * 30), time.Minute * 30))
         }
         if _, ok := list[domain]; !ok {
@@ -64,6 +67,18 @@ func (purge *Purge) Purge(jobs JobBag) {
             list[domain][key] = make(map[string]int)
         }
         list[domain][key][path] = 1
+
+        if domain != altdomain {
+            PrintTrace3("Have an altdomain %s, key: %s", altdomain, key)
+            if _, ok := list[altdomain]; !ok {
+                list[altdomain] = make(map[string]map[string]int)
+            }
+            if _, ok := list[altdomain][key]; !ok {
+                list[altdomain][key] = make(map[string]int)
+            }
+            list[altdomain][key][path] = 1
+        }
+
         return nil
     })
 
