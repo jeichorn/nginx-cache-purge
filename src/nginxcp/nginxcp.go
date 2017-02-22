@@ -24,7 +24,7 @@ var Version string = "2.0.4"
 
 // standard--woocommerce.bluga.info/grid-3-column/?
 // standard--httpswww.bit9.com/forms/free-antivirus-plus-endpoint-protection/?campaign=70180000000f5DK
-var domainFromKey = regexp.MustCompile(`^[^-]+-[^-]*-(https?)?([^/?]+)`)
+var domainFromKey = regexp.MustCompile(`^[^-]*-[^-]*-(https?)?([^/?]+)`)
 
 func loadInitial(cachePath string, keys *CacheKeys) {
 
