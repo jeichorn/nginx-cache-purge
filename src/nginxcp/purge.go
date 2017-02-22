@@ -101,7 +101,7 @@ func (purge *Purge) Purge(jobs JobBag) {
         // (/?)
         regex = strings.Replace(strings.Replace(regexp.QuoteMeta(regex), "\\(\\.\\*\\)", "(.*)", -1), "\\(/\\?\\)", "(/?)", -1)
 
-        regexString := fmt.Sprintf(`^([^-]+--)?(https?)?%s%s(\?.*)?$`, host, regex)
+        regexString := fmt.Sprintf(`^([^-]*--)?(https?)?%s%s(\?.*)?$`, host, regex)
 
         tester, err := regexp.Compile(regexString)
 
