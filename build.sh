@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-export GOPATH=/home/jeichorn/git/nginx-cache-purge
+export GOPATH=`realpath .`
 go get github.com/go-fsnotify/fsnotify
 go get github.com/koyachi/go-term-ansicolor/ansicolor
 go get gopkg.in/redis.v3
